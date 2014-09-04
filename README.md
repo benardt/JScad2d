@@ -23,12 +23,12 @@ Usage
 
 JSON file description for PART
 
-Header
-   Type: part
-   Origine
-Views[]
-  Shape[]
-      Header
-      Points[]
-  Line[]
-  Points[]
+* Header
+  * Type: part
+  * Origine
+* Views[]
+  *Shapes[]
+    * Header
+    * Points[]
+  * Lines[]
+  * Points[]
