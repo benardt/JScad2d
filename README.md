@@ -24,10 +24,10 @@ Draw parts and assemble them in an assembly drawing. Parts and Assy drawing are 
 
 * Header {}
   * Type: part
-  * Origine {}
   * Unit
 * Parameters[]
 * Views[]
+  * Origine{} 
   * Shapes[]
     * Header {}
     * Points[]
