@@ -1,16 +1,16 @@
-JScad2d
-=======
+# JScad2d
+
 
 Javascript Library for CAD 2D drawing from json file
 
 
-Description
-=======
+## Description
+
 
 Draw parts and assemble them in an assembly drawing. Parts and Assy drawing are build from json file. A special editor allows live drawing.
 
-Features
-=======
+## Features
+
 
 * Draw any shape
 * Make fillet
@@ -18,17 +18,37 @@ Features
 * Apply transformation
   * Rotate
 
-Usage
-=======
+## Usage
 
-JSON file description for PART
+### JSON file description for PART
 
-* Header
+* Header {}
   * Type: part
-  * Origine
+  * Origine {}
+  * Unit
+* Parameters[]
 * Views[]
-  *Shapes[]
-    * Header
+  * Shapes[]
+    * Header {}
     * Points[]
   * Lines[]
   * Points[]
+* Dimensions[]
+
+### JSON file description for ASSY
+
+* Header {}
+ * Type: assy
+ * Name
+ * Title
+ * Page size
+ * Unit
+* Parameters[]
+* Parts[]
+  * Name
+  * View
+  * Origine{}
+  * Transformation{}
+* Dimensions[]
+  
+
