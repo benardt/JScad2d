@@ -3,6 +3,8 @@
 
 Javascript Library for CAD 2D drawing from json file
 
+<img alt="Global view" src="https://raw.github.com/josdejong/jsoneditor/master/misc/jsoneditor.png">
+
 
 ## Description
 
