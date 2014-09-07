@@ -1,0 +1,99 @@
+{
+  "Header": {
+    "Name": "Drawing_1",
+    "Title": "Pièce de l'assemblage",
+    "Unit": "mm",
+    "Scale": 1.2
+  },
+  "Parameters": {
+    "ID": 30,
+    "Th1": 5
+  },
+  "Elements": [
+    {
+      "Header": {
+        "Origine": {
+          "x": 50,
+          "y": 200
+        },
+        "Constructor": 1,
+        "Name": "Cube",
+        "Hatch": {
+          "Color": "lightgray",
+          "Angle": 45,
+          "Distance": 10
+        }
+      },
+      "Shapes": [
+        {
+          "Points": [
+            {
+              "x": 0,
+              "y": 0,
+              "length": 30,
+              "angle": 30,
+              "r": null
+            },
+            {
+              "x": 0,
+              "y": "(30 + 20) * 2",
+              "length": 40,
+              "angle": 30,
+              "r": 30
+            },
+            {
+              "x": 100,
+              "y": 100,
+              "length": 60,
+              "angle": 30,
+              "r": null
+            },
+            {
+              "x": 100,
+              "y": 50,
+              "length": 12,
+              "angle": 30,
+              "r": 20
+            },
+            {
+              "x": 310,
+              "y": 50,
+              "length": 12,
+              "angle": 30,
+              "r": null
+            },
+            {
+              "x": 310,
+              "y": 0,
+              "length": 12,
+              "angle": 30,
+              "r": null
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Format": {
+    "shape_thick": 3,
+    "font_size": 12,
+    "Hatch_thick": 1,
+    "Dimensions_color": "lightblue"
+  },
+  "Dimensions": [
+    {
+      "PtStart": {
+        "Element": 0,
+        "Shape": 0,
+        "Point": 1
+      },
+      "PtEnd": {
+        "Element": 0,
+        "Shape": 0,
+        "Point": 4
+      },
+      "Direction": "horizontal",
+      "FreeSpace": 40
+    }
+  ]
+}

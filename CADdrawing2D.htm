@@ -1,0 +1,281 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<link rel="shortcut icon" href="./img/ruler-triangle.ico" />
+	<title>2D CAD Drawing</title>
+	<style>
+        body {
+                font-family: "Helvetica", "Arial", "FreeSans", "Verdana", "Tahoma", "Lucida Sans", "Lucida Sans Unicode", "Luxi Sans", sans-serif;
+            }
+        td.menu {
+	           background: #4679bd;
+	           color: #fff;
+            }
+	</style>
+	<link rel="stylesheet" type="text/css" href="./jsoneditor/jsoneditor.min.css">
+	<script type="text/javascript" src="./jsoneditor/jsoneditor.min.js"></script>
+	<script src="./filereader/filereader.js"></script>
+	<script src="./drawing2d.js"></script>
+</head>
+<body>
+<table border="0">
+    <tr><td rowspan="2"><img src="./img/ruler-triangle-48.png" /></td><td class="menu">Load a JSON file: </td>         <td class="menu"><input type="file" id="loadDocument" value="Load" name="f3" class="f3"/></td>
+    <td rowspan="4"><div id="drawing"></div></td>
+    </tr>
+    <tr>
+	<td class="menu">Save file to: </td><td class="menu"><button onclick="saveTextAsFile()" >JSON</button>&nbsp;<button onclick="saveTextAsSVG()" >SVG</button></td>
+    </tr>
+    <tr>
+    <td colspan="3"><div id="jsoneditor" style="width: 450px; height: 400px;" ></div>	</td>
+    </tr>
+    <tr>
+        <td class="menu" colspan="3" ><h3>Debug section:</h3><br><div id="debug"></div></td>
+    </tr>
+    
+    
+    <tr><td  class="menu" colspan="3" >
+        squeleton: <input class="messageCheckbox" type="checkbox" value="1" name="mailId[]">&nbsp;
+        fillet: <input class="messageCheckbox" type="checkbox" value="2" name="mailId[]">
+     </td></tr>
+</table>
+
+
+<script type="text/javascript" >
+    // create the editor
+    var container = document.getElementById("jsoneditor");
+    var editor = new JSONEditor(container);
+
+    
+    
+//-------------------------------------------------------------------
+// Main function
+//-------------------------------------------------------------------
+function doUpdate () {
+    var obj = editor.get();
+        
+    //var constructor = document.querySelector('.messageCheckbox:checked').value;
+    var constructor = null; 
+    var inputElements = document.getElementsByClassName('messageCheckbox');
+    for(var i=0; inputElements[i]; ++i){
+        if(inputElements[i].checked){
+            constructor = 1 * inputElements[i].value;
+            break;
+        }
+    }
+
+        //document.getElementById("debug").innerHTML = JSON.stringify(json, null, 2);
+        document.getElementById("debug").innerHTML = "Total elements: " + obj.Views.length + "<br>" + 
+            "checked box: " + constructor  + "<br>";
+        
+
+// -----------------------------------------------
+// Dessin de la forme
+// -------------------------------------------------
+
+    var noview = 0,
+        noshape,
+        i;
+	
+    svg = "<svg height=\"210\" width=\"500\" xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
+    svg += "<title>Example triangle01- simple example of a 'path'</title>";
+    svg += "<desc>A path that draws a triangle</desc>";
+      
+      
+	svg += "<defs>";
+	svg += "<marker id=\"markerArrowStart\" markerWidth=\"13\" markerHeight=\"13\" refx=\"2\" refy=\"5\"  orient=\"auto\">";
+    svg += "<path d=\"M2,5 L10,9 L10,2 L2,5\" style=\"fill:" + obj.Format.Dimensions_color + ";\" />";
+	svg += "</marker>";
+	svg += "<marker id=\"markerArrowEnd\" markerWidth=\"13\" markerHeight=\"13\" refx=\"10\" refy=\"5\"  orient=\"auto\">";
+    svg += "<path d=\"M2,2 L2,9 L10,5 L2,2\" style=\"fill:" + obj.Format.Dimensions_color + ";\" />";
+	svg += "</marker>";
+	svg += "</defs>";
+      
+    // patern pour hachure
+    if (obj.Views[noview].Header.Hatch.Distance != null) {
+		svg += "<defs>";
+		var espacement = obj.Views[noview].Header.Hatch.Distance;
+		svg += "<pattern id=\"diagonalHatch\" patternUnits=\"userSpaceOnUse\" width=\"" + obj.Views[noview].Header.Hatch.Distance + "\" height=\"" + obj.Views[noview].Header.Hatch.Distance + "\" patternTransform=\"rotate(" + obj.Views[noview].Header.Hatch.Angle + " 2 2)\">";
+		svg += "<path d=\"M -1,2 l 18,0\" stroke=\"" + obj.Views[noview].Header.Hatch.Color + "\" stroke-width=\"" + obj.Format.Hatch_thick + "\"/>";
+		svg += "</pattern>";
+		svg += "</defs>";
+	}
+
+
+    // replace parameters by value and evaluate formula
+
+    var param = [];
+    
+    for (var propr in obj.Parameters) {
+           param.push(propr);
+    }
+    
+    // Attention le remplacement ne fonctionne pas toujours
+    // quand le nom d'un paramètre est inclu dans le nom d'un autre
+
+    for (noshape = 0; noshape <= obj.Views[noview].Shapes.length - 1; noshape += 1) {
+	for (i = 0; i <= obj.Views[noview].Shapes[noshape].Points.length - 1; i += 1) {
+		if (typeof obj.Views[noview].Shapes[noshape].Points[i].x == 'string' || obj.Views[noview].Shapes[noshape].Points[i].x instanceof String) {
+			for (var noprop = 0; noprop <= param.length - 1; noprop += 1) {
+				var reg=new RegExp(param[noprop], "g");
+				obj.Views[noview].Shapes[noshape].Points[i].x = obj.Views[noview].Shapes[noshape].Points[i].x.replace(reg, " " + obj.Parameters[param[noprop]]);
+			}		
+		}
+		if (typeof obj.Views[noview].Shapes[noshape].Points[i].y == 'string' || obj.Views[noview].Shapes[noshape].Points[i].y instanceof String) {
+			for (var noprop = 0; noprop <= param.length - 1; noprop += 1) {
+				var reg=new RegExp(param[noprop], "g");
+				obj.Views[noview].Shapes[noshape].Points[i].y = obj.Views[noview].Shapes[noshape].Points[i].y.replace(reg, " " + obj.Parameters[param[noprop]]);
+			}		
+		}
+		if (typeof obj.Views[noview].Shapes[noshape].Points[i].r == 'string' || obj.Views[noview].Shapes[noshape].Points[i].r instanceof String) {
+			for (var noprop = 0; noprop <= param.length - 1; noprop += 1) {
+				var reg=new RegExp(param[noprop], "g");
+				obj.Views[noview].Shapes[noshape].Points[i].r = obj.Views[noview].Shapes[noshape].Points[i].r.replace(reg, " " + obj.Parameters[param[noprop]]);
+			}		
+		}
+	}
+    }
+
+    for (noshape = 0; noshape <= obj.Views[noview].Shapes.length - 1; noshape += 1) {
+	for (i = 0; i <= obj.Views[noview].Shapes[noshape].Points.length - 1; i += 1) {
+           obj.Views[noview].Shapes[noshape].Points[i].x = mathEval("(" + obj.Views[noview].Shapes[noshape].Points[i].x +")");
+           obj.Views[noview].Shapes[noshape].Points[i].y = mathEval("(" + obj.Views[noview].Shapes[noshape].Points[i].y +")");
+           //alert(obj.Views[noview].Shapes[noshape].Points[i].y);
+           if (obj.Views[noview].Shapes[noshape].Points[i].r !== null) {
+               obj.Views[noview].Shapes[noshape].Points[i].r = mathEval("(" + obj.Views[noview].Shapes[noshape].Points[i].r +")");
+           }
+       }
+    }
+
+
+        
+    // draw shape (with rounded corner if specified)
+	for (noshape = 0; noshape <= obj.Views[noview].Shapes.length - 1; noshape += 1) {
+		svg += Shape(obj.Views[noview].Header.Name,
+                 obj.Views[noview].Shapes[noshape].Points,
+                 obj.Header.Scale, 
+                 obj.Views[noview].Header.Origine,
+                 obj.Views[noview].Shapes[noshape].Fill, 
+                 constructor,
+                 obj.Format);
+	}
+
+    // draw dimension
+
+	var nodim = 0;
+
+	svg += Dimension(obj, obj.Dimensions[nodim]);
+
+	
+	svg += "</svg>";
+    document.getElementById("drawing").innerHTML = svg;
+
+    window.setTimeout(doUpdate, 250);       // loop for live print
+}
+   
+
+
+
+// Load a JSON document
+  FileReaderJS.setupInput(document.getElementById('loadDocument'), {
+    readAsDefault: 'Text',
+    on: {
+      load: function (event, file) {
+        editor.setText(event.target.result);
+        doUpdate();
+      }
+    }
+  });
+  
+  
+// save as SVG
+function saveTextAsSVG() {
+    "use strict";
+	//var textToWrite = document.getElementById("inputTextToSave").value;
+	var json = editor.get();
+	var textToWrite = document.getElementById("drawing").innerHTML;
+	
+	var textFileAsBlob = new Blob([textToWrite], {type:'text/plain'});
+	var fileNameToSaveAs = json.Header.Name + "_svg.svg";
+	
+	
+
+	var downloadLink = document.createElement("a");
+	downloadLink.download = fileNameToSaveAs;
+	downloadLink.innerHTML = "Download File";
+	if (window.webkitURL != null)
+	{
+		// Chrome allows the link to be clicked
+		// without actually adding it to the DOM.
+		downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+	}
+	else
+	{
+		// Firefox requires the link to be added to the DOM
+		// before it can be clicked.
+		
+		downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+		downloadLink.onclick = destroyClickedElement;
+		downloadLink.style.display = "none";
+		document.body.appendChild(downloadLink);
+		
+	}
+
+	downloadLink.click();
+}
+  
+// save file
+function saveTextAsFile()
+{
+	//var textToWrite = document.getElementById("inputTextToSave").value;
+	var json = editor.get();
+	var textToWrite = JSON.stringify(json, null, 2);
+	
+	var textFileAsBlob = new Blob([textToWrite], {type:'text/plain'});
+	var fileNameToSaveAs = json.Header.Name + ".json";
+	
+	
+	var downloadLink = document.createElement("a");
+	downloadLink.download = fileNameToSaveAs;
+	downloadLink.innerHTML = "Download File";
+	if (window.webkitURL != null)
+	{
+		// Chrome allows the link to be clicked
+		// without actually adding it to the DOM.
+		downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+	}
+	else
+	{
+		// Firefox requires the link to be added to the DOM
+		// before it can be clicked.
+		
+		downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+		downloadLink.onclick = destroyClickedElement;
+		downloadLink.style.display = "none";
+		document.body.appendChild(downloadLink);
+		
+	}
+
+	downloadLink.click();
+}
+
+function destroyClickedElement(event)
+{
+	document.body.removeChild(event.target);
+}
+
+//-------------------------------------------------------------
+// Test if str is JSON format
+//-------------------------------------------------------------
+function IsJsonString(str) {
+    try {
+        JSON.parse(str);
+    } catch (e) {
+        return false;
+    }
+    return true;
+}
+
+</script>
+</body>
+</html>
