@@ -16,7 +16,7 @@
 	<link rel="stylesheet" type="text/css" href="./jsoneditor/jsoneditor.min.css">
 	<script type="text/javascript" src="./jsoneditor/jsoneditor.min.js"></script>
 	<script src="./filereader/filereader.js"></script>
-	<script src="./drawing2d.js"></script>
+	<script src="./JScad2d.js"></script>
 </head>
 <body>
 <table border="0">
@@ -36,7 +36,8 @@
     
     <tr><td  class="menu" colspan="3" >
         squeleton: <input class="messageCheckbox" type="checkbox" value="1" name="mailId[]">&nbsp;
-        fillet: <input class="messageCheckbox" type="checkbox" value="2" name="mailId[]">
+        fillet: <input class="messageCheckbox" type="checkbox" value="2" name="mailId[]">&nbsp;
+        origin: <input class="messageCheckbox" type="checkbox" value="3" name="mailId[]">&nbsp;
      </td></tr>
 </table>
 
@@ -73,7 +74,7 @@ function doUpdate () {
 // Dessin de la forme
 // -------------------------------------------------
 
-    var noview = 0,
+    var noview,
         noshape,
         i;
 	
@@ -92,14 +93,16 @@ function doUpdate () {
 	svg += "</defs>";
       
     // patern pour hachure
+    for (noview = 0; noview <= obj.Views.length - 1; noview += 1) {
     if (obj.Views[noview].Header.Hatch.Distance != null) {
 		svg += "<defs>";
 		var espacement = obj.Views[noview].Header.Hatch.Distance;
-		svg += "<pattern id=\"diagonalHatch\" patternUnits=\"userSpaceOnUse\" width=\"" + obj.Views[noview].Header.Hatch.Distance + "\" height=\"" + obj.Views[noview].Header.Hatch.Distance + "\" patternTransform=\"rotate(" + obj.Views[noview].Header.Hatch.Angle + " 2 2)\">";
+		svg += "<pattern id=\"diagonalHatch" + "View" + noview + "\" patternUnits=\"userSpaceOnUse\" width=\"" + obj.Views[noview].Header.Hatch.Distance + "\" height=\"" + obj.Views[noview].Header.Hatch.Distance + "\" patternTransform=\"rotate(" + obj.Views[noview].Header.Hatch.Angle + " 2 2)\">";
 		svg += "<path d=\"M -1,2 l 18,0\" stroke=\"" + obj.Views[noview].Header.Hatch.Color + "\" stroke-width=\"" + obj.Format.Hatch_thick + "\"/>";
 		svg += "</pattern>";
 		svg += "</defs>";
 	}
+    }
 
 
     // replace parameters by value and evaluate formula
@@ -113,6 +116,7 @@ function doUpdate () {
     // Attention le remplacement ne fonctionne pas toujours
     // quand le nom d'un paramètre est inclu dans le nom d'un autre
 
+    for (noview = 0; noview <= obj.Views.length - 1; noview += 1) {
     for (noshape = 0; noshape <= obj.Views[noview].Shapes.length - 1; noshape += 1) {
 	for (i = 0; i <= obj.Views[noview].Shapes[noshape].Points.length - 1; i += 1) {
 		if (typeof obj.Views[noview].Shapes[noshape].Points[i].x == 'string' || obj.Views[noview].Shapes[noshape].Points[i].x instanceof String) {
@@ -135,7 +139,9 @@ function doUpdate () {
 		}
 	}
     }
+    }
 
+    for (noview = 0; noview <= obj.Views.length - 1; noview += 1) {
     for (noshape = 0; noshape <= obj.Views[noview].Shapes.length - 1; noshape += 1) {
 	for (i = 0; i <= obj.Views[noview].Shapes[noshape].Points.length - 1; i += 1) {
            obj.Views[noview].Shapes[noshape].Points[i].x = mathEval("(" + obj.Views[noview].Shapes[noshape].Points[i].x +")");
@@ -146,25 +152,38 @@ function doUpdate () {
            }
        }
     }
+    }
 
 
         
     // draw shape (with rounded corner if specified)
+    for (noview = 0; noview <= obj.Views.length - 1; noview += 1) {
 	for (noshape = 0; noshape <= obj.Views[noview].Shapes.length - 1; noshape += 1) {
 		svg += Shape(obj.Views[noview].Header.Name,
                  obj.Views[noview].Shapes[noshape].Points,
                  obj.Header.Scale, 
                  obj.Views[noview].Header.Origine,
-                 obj.Views[noview].Shapes[noshape].Fill, 
+                 obj.Views[noview].Shapes[noshape].Fill,
+                 noview,
                  constructor,
                  obj.Format);
 	}
+    }
 
     // draw dimension
-
 	var nodim = 0;
-
 	svg += Dimension(obj, obj.Dimensions[nodim]);
+    
+    // draw origin for each View
+    if (constructor === 3) {
+        svg += "\n<g>";
+        for (noview = 0; noview <= obj.Views.length - 1; noview += 1) {
+                svg += "<circle cx=\"" + (obj.Views[noview].Header.Origine.x) + "\"" +
+                              " cy=\"" + (obj.Views[noview].Header.Origine.y) + "\"" +
+                              " r=\"4\" stroke-width=\"0\" fill=\"blue\"/>";
+        }
+    }
+    svg += "</g>";
 
 	
 	svg += "</svg>";

@@ -4,7 +4,7 @@
     "Name": "Part-spigot",
     "Title": "Spigot SAEJ2044 6.35",
     "Unit": "mm",
-    "Scale": 12
+    "Scale": 10
   },
   "Parameters": {
     "A": 6.3,
@@ -18,14 +18,14 @@
     {
       "Header": {
         "Origine": {
-          "x": 50,
-          "y": 150
+          "x": 140,
+          "y": 100
         },
-        "Name": "Top",
+        "Name": "Right",
         "Hatch": {
-          "Color": "gray",
+          "Color": "red",
           "Angle": 45,
-          "Distance": 10
+          "Distance": 6
         }
       },
       "Shapes": [
@@ -152,28 +152,144 @@
           ]
         }
       ]
+    },
+    {
+      "Header": {
+        "Origine": {
+          "x": 60,
+          "y": 100
+        },
+        "Name": "Front",
+        "Hatch": {
+          "Color": "blue",
+          "Angle": 45,
+          "Distance": 6
+        }
+      },
+      "Shapes": [
+        {
+          "Fill": null,
+          "Points": [
+            {
+              "x": "(-B / 2)",
+              "y": "(B / 2)",
+              "length": 30,
+              "angle": 30,
+              "r": "(B / 2)"
+            },
+            {
+              "x": "(B / 2)",
+              "y": "(B / 2)",
+              "length": 40,
+              "angle": 30,
+              "r": "(B / 2)"
+            },
+            {
+              "x": "(B / 2)",
+              "y": "(-B / 2)",
+              "length": 60,
+              "angle": 30,
+              "r": "(B / 2)"
+            },
+            {
+              "x": "(-B / 2)",
+              "y": "(-B / 2)",
+              "length": 12,
+              "angle": 30,
+              "r": "(B / 2)"
+            }
+          ]
+        },
+        {
+          "Fill": "hatch",
+          "Points": [
+            {
+              "x": "(-A / 2)",
+              "y": "(A / 2)",
+              "length": 30,
+              "angle": 30,
+              "r": "(A / 2)"
+            },
+            {
+              "x": "(A / 2)",
+              "y": "(A / 2)",
+              "length": 40,
+              "angle": 30,
+              "r": "(A / 2)"
+            },
+            {
+              "x": "(A / 2)",
+              "y": "(-A / 2)",
+              "length": 60,
+              "angle": 30,
+              "r": "(A / 2)"
+            },
+            {
+              "x": "(-A / 2)",
+              "y": "(-A / 2)",
+              "length": 12,
+              "angle": 30,
+              "r": "(A / 2)"
+            }
+          ]
+        },
+        {
+          "Fill": null,
+          "Points": [
+            {
+              "x": "(-ID / 2)",
+              "y": "(ID / 2)",
+              "length": 30,
+              "angle": 30,
+              "r": "(ID / 2)"
+            },
+            {
+              "x": "(ID / 2)",
+              "y": "(ID / 2)",
+              "length": 40,
+              "angle": 30,
+              "r": "(ID / 2)"
+            },
+            {
+              "x": "(ID / 2)",
+              "y": "(-ID / 2)",
+              "length": 60,
+              "angle": 30,
+              "r": "(ID / 2)"
+            },
+            {
+              "x": "(-ID / 2)",
+              "y": "(-ID / 2)",
+              "length": 12,
+              "angle": 30,
+              "r": "(ID / 2)"
+            }
+          ]
+        }
+      ]
     }
   ],
   "Format": {
     "shape_thick": 3,
     "font_size": 12,
     "Hatch_thick": 1,
-    "Dimensions_color": "lightblue"
+    "Dimensions_color": "gold"
   },
   "Dimensions": [
     {
       "PtStart": {
-        "Element": 0,
+        "View": 0,
         "Shape": 0,
         "Point": 1
       },
       "PtEnd": {
-        "Element": 0,
+        "View": 0,
         "Shape": 0,
-        "Point": 4
+        "Point": 2
       },
       "Direction": "horizontal",
-      "FreeSpace": 40
+      "Sens": "top",
+      "FreeSpace": 60
     }
   ]
 }

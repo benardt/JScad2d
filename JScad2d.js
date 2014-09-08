@@ -27,12 +27,16 @@ function Point(x, y, r) {
 // --------------------------------------------------
 function getWidthString(the_text_that_you_want_to_measure, fontsize, fontname) {
 	"use strict";
-	var c = document.createElement('canvas'), // Create a dummy canvas (render invisible with css)
-	    ctx = c.getContext('2d'); // Get the context of the dummy canvas
+    var c,
+        ctx,
+        metric;
+	c = document.createElement('canvas'); // Create a dummy canvas (render invisible with css)
+
+    ctx = c.getContext('2d'); // Get the context of the dummy canvas
 	// Set the context.font to the font that you are using
 	ctx.font = fontsize + 'px' + fontname;
 	// Measure the string 
-	var metric = ctx.measureText(the_text_that_you_want_to_measure);
+	metric = ctx.measureText(the_text_that_you_want_to_measure);
 	return metric.width;
 }
 
@@ -50,8 +54,9 @@ function Shape() {
 	    scale = arguments[2],      // échelle de l'affichage
 	    ori = arguments[3],        // origine du dessin
         texture = arguments[4],     // texture
-        affichage = arguments[5],   // 1: affiche, 0: n'affiche pas
-        format = arguments[6],      // format
+        noview = arguments[5],      // view # for hatch pattern
+        affichage = arguments[6],   // 1: affiche, 0: n'affiche pas
+        format = arguments[7],      // format
 
         p = [],                     // number of previous point
         s = [],                     // number of next point
@@ -170,7 +175,7 @@ function Shape() {
 	
 	// texture de la forme
 	if (texture === "hatch") {
-		ttexte += "z\" fill=\"url(#diagonalHatch)\" stroke=\"black\" stroke-width=\"2\" /></g>";
+		ttexte += "z\" fill=\"url(#diagonalHatch" + "View" + noview +")\" stroke=\"black\" stroke-width=\"2\" /></g>";
 	} else {
 		ttexte += "z\" fill=\"white\" stroke=\"black\" stroke-width=\"2\" /></g>";
 	}
@@ -306,9 +311,9 @@ function Dimension(objet, dim) {
         eloignement = 5,            // length in pixel between shape and attach line
         longueur = dim.FreeSpace,   // length in pixel between dimension line and shape
 
-        PtStart = objet.Views[dim.PtStart.Element].Shapes[dim.PtStart.Shape].Points[dim.PtStart.Point],
-        PtEnd = objet.Views[dim.PtEnd.Element].Shapes[dim.PtEnd.Shape].Points[dim.PtEnd.Point],
-        Ori = objet.Views[dim.PtStart.Element].Header.Origine,
+        PtStart = objet.Views[dim.PtStart.View].Shapes[dim.PtStart.Shape].Points[dim.PtStart.Point],
+        PtEnd = objet.Views[dim.PtEnd.View].Shapes[dim.PtEnd.Shape].Points[dim.PtEnd.Point],
+        Ori = objet.Views[dim.PtStart.View].Header.Origine,
         scale = objet.Header.Scale,
         
         maxy,
@@ -348,9 +353,9 @@ function Dimension(objet, dim) {
 		
 		// text
 		stringtoprint = (PtStart.x + PtEnd.x + " " + objet.Header.Unit);
-		res += "<text" + 
+		res += "<text" +
                " x=\"" + (Ori.x + scale * 0.5 * (PtStart.x + PtEnd.x) -
-                 0.5 * getWidthString(stringtoprint, objet.Format.font_size, "Helvetica")) +"\"" +
+                 0.5 * getWidthString(stringtoprint, objet.Format.font_size, "Helvetica")) + "\"" +
                " y=\"" + (Ori.y - maxy) +
                "\" fill=\"" + objet.Format.Dimensions_color +
                "\" font-size=\"" + objet.Format.font_size + "\" >" + stringtoprint + "</text>";
