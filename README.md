@@ -3,7 +3,7 @@
 
 Javascript Library for CAD 2D drawing from json file
 
-<img alt="Global view" src="GlobalView.png">
+<img alt="Global view" src="https://github.com/benardt/JScad2d/blob/master/misc/VueGlobale.png">
 
 
 ## Description
