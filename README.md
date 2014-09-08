@@ -53,4 +53,9 @@ Draw parts and assemble them in an assembly drawing. Parts and Assy drawing are 
   * Transformation{}
 * Dimensions[]
   
+### Dependencies
+
+* jsoneditor (https://github.com/josdejong/jsoneditor/)
+* filereader.js (https://github.com/bgrins/filereader.js)
+* 
 
