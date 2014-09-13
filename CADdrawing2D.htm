@@ -17,15 +17,17 @@
 	<script type="text/javascript" src="./jsoneditor/jsoneditor.min.js"></script>
 	<script src="./filereader/filereader.js"></script>
 	<script src="./JScad2d.js"></script>
+	<script src="./zoom.js"></script>
 </head>
 <body>
 <table border="0">
-    <tr><td rowspan="2"><img src="./img/ruler-triangle-48.png" /></td><td class="menu">Load a JSON file: </td>         <td class="menu"><input type="file" id="loadDocument" value="Load" name="f3" class="f3"/></td>
+    <tr><td rowspan="3"><img src="./img/ruler-triangle-48.png" /></td><td class="menu">Load a JSON file: </td>         <td class="menu"><input type="file" id="loadDocument" value="Load" name="f3" class="f3"/></td>
     <td rowspan="4"><div id="drawing"></div></td>
     </tr>
     <tr>
 	<td class="menu">Save file to: </td><td class="menu"><button onclick="saveTextAsFile()" >JSON</button>&nbsp;<button onclick="saveTextAsSVG()" >SVG</button></td>
     </tr>
+    <tr><td><button type="button" onclick="zoom('zoomIn');">Zoom In</button><button type="button" onclick="zoom('zoomOut');">Zoom Out</button></td></tr>
     <tr>
     <td colspan="3"><div id="jsoneditor" style="width: 450px; height: 400px;" ></div>	</td>
     </tr>
@@ -47,12 +49,21 @@
     var container = document.getElementById("jsoneditor");
     var editor = new JSONEditor(container);
 
+
+//-------------------------------------------------------------------
+function doInitialization() {
+    doUpdate();
+    document.body.addEventListener("keyup",doUpdate, false);
+
+}
     
     
 //-------------------------------------------------------------------
 // Main function
 //-------------------------------------------------------------------
 function doUpdate () {
+    	
+
     var obj = editor.get();
         
     //var constructor = document.querySelector('.messageCheckbox:checked').value;
@@ -77,8 +88,17 @@ function doUpdate () {
     var noview,
         noshape,
         i;
-	
-    svg = "<svg height=\"210\" width=\"500\" xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
+    
+    // cas du zoom
+
+    if (typeof theSvgElement === "undefined") {
+           svg = "<svg height=\"400\" width=\"600\" viewBox=\"0 0 400 600\"  xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
+    } else {
+        var viewBox = theSvgElement.getAttribute('viewBox');	// Grab the object representing the SVG element's viewBox attribute.
+        svg = "<svg height=\"400\" width=\"600\" viewBox=\"" + viewBox + "\"  xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
+    }
+
+   
     svg += "<title>Example triangle01- simple example of a 'path'</title>";
     svg += "<desc>A path that draws a triangle</desc>";
       
@@ -188,8 +208,9 @@ function doUpdate () {
 	
 	svg += "</svg>";
     document.getElementById("drawing").innerHTML = svg;
+    theSvgElement = document.getElementsByTagName("svg")[0];
 
-    window.setTimeout(doUpdate, 250);       // loop for live print
+    //window.setTimeout(doUpdate, 250);       // loop for live print
 }
    
 
@@ -201,7 +222,8 @@ function doUpdate () {
     on: {
       load: function (event, file) {
         editor.setText(event.target.result);
-        doUpdate();
+        //doUpdate();
+	doInitialization();
       }
     }
   });
