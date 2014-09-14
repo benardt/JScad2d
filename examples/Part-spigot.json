@@ -279,6 +279,21 @@
     {
       "PtStart": {
         "View": 0,
+        "Shape": 1,
+        "Point": 1
+      },
+      "PtEnd": {
+        "View": 0,
+        "Shape": 1,
+        "Point": 2
+      },
+      "Direction": "horizontal",
+      "Sens": "bottom",
+      "FreeSpace": 60
+    },
+    {
+      "PtStart": {
+        "View": 0,
         "Shape": 0,
         "Point": 1
       },
@@ -290,6 +305,21 @@
       "Direction": "horizontal",
       "Sens": "top",
       "FreeSpace": 60
+    },
+    {
+      "PtStart": {
+        "View": 1,
+        "Shape": 0,
+        "Point": 0
+      },
+      "PtEnd": {
+        "View": 1,
+        "Shape": 0,
+        "Point": 3
+      },
+      "Direction": "vertical",
+      "Sens": "left",
+      "FreeSpace": 40
     }
   ]
 }

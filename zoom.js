@@ -34,6 +34,33 @@ function processKeyPress(evt) {
       
     theSvgElement.setAttribute('viewBox', viewBoxValues.join(' '));	// Convert the viewBoxValues array into a string with a white space character between the given values.
 }
+
+
+function pan(sens) {
+    "use strict";
+    var viewBox = theSvgElement.getAttribute('viewBox'),	// Grab the object representing the SVG element's viewBox attribute.
+        viewBoxValues = viewBox.split(' ');				// Create an array and insert each individual view box attribute value (assume they're seperated by a single whitespace character).
+
+    viewBoxValues[0] = parseFloat(viewBoxValues[0]);		// Convert string "numeric" values to actual numeric values.
+    viewBoxValues[1] = parseFloat(viewBoxValues[1]);
+      
+    switch (sens) {
+    case "left":
+        viewBoxValues[0] += panRate;	// Increase the x-coordinate value of the viewBox attribute to pan right.
+        break;
+    case "right":
+        viewBoxValues[0] -= panRate;	// Decrease the x-coordinate value of the viewBox attribute to pan left.
+        break;
+    case "up":
+        viewBoxValues[1] += panRate;	// Increase the y-coordinate value of the viewBox attribute to pan down.
+        break;
+    case "down":
+        viewBoxValues[1] -= panRate;	// Decrease the y-coordinate value of the viewBox attribute to pan up.      
+        break;
+    } // switch
+      
+    theSvgElement.setAttribute('viewBox', viewBoxValues.join(' '));	// Convert the viewBoxValues array into a string with a white space character between the given values.
+}
     
 function zoom(zoomType) {
     "use strict";

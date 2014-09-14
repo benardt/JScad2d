@@ -27,7 +27,18 @@
     <tr>
 	<td class="menu">Save file to: </td><td class="menu"><button onclick="saveTextAsFile()" >JSON</button>&nbsp;<button onclick="saveTextAsSVG()" >SVG</button></td>
     </tr>
-    <tr><td><button type="button" onclick="zoom('zoomIn');">Zoom In</button><button type="button" onclick="zoom('zoomOut');">Zoom Out</button></td></tr>
+    <tr>
+           <td class="menu">
+	      <button type="button" onclick="zoom('zoomIn');">Zoom In</button>
+	      <button type="button" onclick="zoom('zoomOut');">Zoom Out</button>
+           </td>
+           <td class="menu">
+	      <button type="button" onclick="pan('left');">&#8678;</button>
+              <button type="button" onclick="pan('up');">&#8679;</button>
+              <button type="button" onclick="pan('down');">&#8681;</button>
+              <button type="button" onclick="pan('right');">&#8680;</button>
+           </td>
+    </tr>
     <tr>
     <td colspan="3"><div id="jsoneditor" style="width: 450px; height: 400px;" ></div>	</td>
     </tr>
@@ -191,8 +202,9 @@ function doUpdate () {
     }
 
     // draw dimension
-	var nodim = 0;
+    for (var nodim = 0; nodim <= obj.Dimensions.length - 1; nodim += 1) {
 	svg += Dimension(obj, obj.Dimensions[nodim]);
+    }
     
     // draw origin for each View
     if (constructor === 3) {
@@ -210,7 +222,7 @@ function doUpdate () {
     document.getElementById("drawing").innerHTML = svg;
     theSvgElement = document.getElementsByTagName("svg")[0];
 
-    //window.setTimeout(doUpdate, 250);       // loop for live print
+    //window.setTimeout(doUpdate, 250);       // loop for live print not use with event handler
 }
    
 

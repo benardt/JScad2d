@@ -304,31 +304,65 @@ function mathEval(exp) {
 
 //--------------------------------------------------------------------------------------------
 // Draw dimension
+// input:
+//         objet: all data in object form
+//         dim  : objet of no of dimension to draw
 //--------------------------------------------------------------------------------------------
 function Dimension(objet, dim) {
     "use strict";
 	var res,
-        eloignement = 5,            // length in pixel between shape and attach line
-        longueur = dim.FreeSpace,   // length in pixel between dimension line and shape
+            eloignement = 5,            // length in pixel between shape and attach line
+            longueur = dim.FreeSpace,   // length in pixel between dimension line and shape
 
-        PtStart = objet.Views[dim.PtStart.View].Shapes[dim.PtStart.Shape].Points[dim.PtStart.Point],
-        PtEnd = objet.Views[dim.PtEnd.View].Shapes[dim.PtEnd.Shape].Points[dim.PtEnd.Point],
-        Ori = objet.Views[dim.PtStart.View].Header.Origine,
-        scale = objet.Header.Scale,
+            PtStart = objet.Views[dim.PtStart.View].Shapes[dim.PtStart.Shape].Points[dim.PtStart.Point],
+            PtEnd = objet.Views[dim.PtEnd.View].Shapes[dim.PtEnd.Shape].Points[dim.PtEnd.Point],
+            Ori = objet.Views[dim.PtStart.View].Header.Origine,
+            scale = objet.Header.Scale,
         
-        maxy,
-        stringtoprint;              // text to print
+            maxy, maxx,
+            stringtoprint,              // text to print
+            sens;                       // side to draw dimension up or down / left or right
+
+     switch (dim.Sens) {
+     case "top":
+         sens = 1;
+         break;
+     case "bottom":
+         sens = -1;
+         break;
+     case "left":
+         sens = -1;
+         break;
+     case "right":
+         sens = 1;
+         break;
+     } // switch
 	
 	res = "<g>";
 	if (dim.Direction === "vertical") {
-		
+		maxx = Math.max(scale * PtStart.x + sens * longueur, scale * PtEnd.x + sens * longueur);
+		// lignes d'attache (Start side)
+		res += "<line ";
+		res += " x1=\"" + (Ori.x + scale * PtStart.x + sens * eloignement) + "\"" +
+               " y1=\"" + (Ori.y - (scale * PtStart.y)) + "\" ";
+		res += " x2=\"" + (Ori.x + maxx) + "\"" +
+               " y2=\"" + (Ori.y - (scale * PtStart.y)) + "\" ";
+		res += " style=\"stroke:" + objet.Format.Dimensions_color + ";stroke-width:1\" />";
+
+		// lignes d'attache (End side)
+		res += "<line ";
+		res += " x1=\"" + (Ori.x + scale * PtEnd.x + sens * eloignement) + "\"" +
+               " y1=\"" + (Ori.y - (scale * PtEnd.y)) + "\" ";
+		res += " x2=\"" + (Ori.x + maxx) + "\"" +
+               " y2=\"" + (Ori.y - (scale * PtEnd.y)) + "\" ";
+		res += " style=\"stroke:" + objet.Format.Dimensions_color + ";stroke-width:1\" />";
 		
 	} else if (dim.Direction === "horizontal") {
-		maxy = Math.max(scale * PtStart.y + longueur, scale * PtEnd.y + longueur);
+		maxy = Math.max(scale * PtStart.y + sens * longueur, scale * PtEnd.y + sens * longueur);
 		// lignes d'attache (Start side)
 		res += "<line ";
 		res += " x1=\"" + (scale * PtStart.x + Ori.x) + "\"" +
-               " y1=\"" + (Ori.y - (scale * PtStart.y + eloignement)) + "\" ";
+               " y1=\"" + (Ori.y - (scale * PtStart.y + sens * eloignement)) + "\" ";
 		res += " x2=\"" + (scale * PtStart.x + Ori.x) + "\"" +
                "y2=\"" + (Ori.y - maxy) + "\" ";
 		res += " style=\"stroke:" + objet.Format.Dimensions_color + ";stroke-width:1\" />";
@@ -336,7 +370,7 @@ function Dimension(objet, dim) {
 		// lignes d'attache (End side)
 		res += "<line ";
 		res += " x1=\"" + (scale * PtEnd.x + Ori.x) + "\"" +
-               " y1=\"" + (Ori.y - (scale * PtEnd.y + eloignement)) + "\" ";
+               " y1=\"" + (Ori.y - (scale * PtEnd.y + sens * eloignement)) + "\" ";
 		res += " x2=\"" + (scale * PtEnd.x + Ori.x) + "\"" +
                " y2=\"" + (Ori.y - maxy) + "\" ";
 		res += " style=\"stroke:" + objet.Format.Dimensions_color + ";stroke-width:1\" />";
@@ -344,9 +378,9 @@ function Dimension(objet, dim) {
 		// Global line
 		res += "<line ";
 		res += " x1=\"" + (scale * PtStart.x + Ori.x) + "\"" +
-               "y1=\"" + (Ori.y -  (maxy - eloignement)) + "\" ";
+               "y1=\"" + (Ori.y -  (maxy - sens * eloignement)) + "\" ";
 		res += " x2=\"" + (scale * PtEnd.x + Ori.x) + "\"" +
-               "y2=\"" + (Ori.y - (maxy - eloignement)) + "\" ";
+               "y2=\"" + (Ori.y - (maxy - sens * eloignement)) + "\" ";
 		res += " style=\"stroke:" + objet.Format.Dimensions_color + ";stroke-width:1;" +
                " marker-start: url(#markerArrowStart); marker-end: url(#markerArrowEnd);\" />";
 		
@@ -356,11 +390,11 @@ function Dimension(objet, dim) {
 		res += "<text" +
                " x=\"" + (Ori.x + scale * 0.5 * (PtStart.x + PtEnd.x) -
                  0.5 * getWidthString(stringtoprint, objet.Format.font_size, "Helvetica")) + "\"" +
-               " y=\"" + (Ori.y - maxy) +
+               " y=\"" + (Ori.y - (maxy - 0.5 * (1 - sens) * objet.Format.font_size * (0.35146/25.4) * 96)) +
                "\" fill=\"" + objet.Format.Dimensions_color +
                "\" font-size=\"" + objet.Format.font_size + "\" >" + stringtoprint + "</text>";
 
-	}
+	} // else if
 
 	res += "<g>";
 	return res;
