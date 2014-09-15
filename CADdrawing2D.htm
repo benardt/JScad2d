@@ -50,7 +50,7 @@
     <tr><td  class="menu" colspan="3" >
         squeleton: <input class="messageCheckbox" type="checkbox" value="1" name="mailId[]">&nbsp;
         fillet: <input class="messageCheckbox" type="checkbox" value="2" name="mailId[]">&nbsp;
-        origin: <input class="messageCheckbox" type="checkbox" value="3" name="mailId[]">&nbsp;
+       <form id="myForm"> origin: <input class="messageCheckbox" type="checkbox" onclick="drawOrigin()" value="3" name="mailId[]"></form>&nbsp;
      </td></tr>
 </table>
 
@@ -67,15 +67,21 @@ function doInitialization() {
     document.body.addEventListener("keyup",doUpdate, false);
 
 }
-    
+
+// -------------------------------------------
+// Global variable
+
+    var obj;
+
+// ------------------------------------------
     
 //-------------------------------------------------------------------
 // Main function
 //-------------------------------------------------------------------
 function doUpdate () {
     	
+    obj = editor.get();
 
-    var obj = editor.get();
         
     //var constructor = document.querySelector('.messageCheckbox:checked').value;
     var constructor = null; 
@@ -206,25 +212,61 @@ function doUpdate () {
 	svg += Dimension(obj, obj.Dimensions[nodim]);
     }
     
-    // draw origin for each View
-    if (constructor === 3) {
-        svg += "\n<g>";
-        for (noview = 0; noview <= obj.Views.length - 1; noview += 1) {
-                svg += "<circle cx=\"" + (obj.Views[noview].Header.Origine.x) + "\"" +
-                              " cy=\"" + (obj.Views[noview].Header.Origine.y) + "\"" +
-                              " r=\"4\" stroke-width=\"0\" fill=\"blue\"/>";
-        }
-    }
-    svg += "</g>";
+
 
 	
-	svg += "</svg>";
+    svg += "\n<g id=\"origin\"></g>";
+    svg += "</svg>";
     document.getElementById("drawing").innerHTML = svg;
     theSvgElement = document.getElementsByTagName("svg")[0];
+
+    drawOrigin();
 
     //window.setTimeout(doUpdate, 250);       // loop for live print not use with event handler
 }
    
+
+ 
+// ------------------------------------------------
+// function: Draw origin
+// ------------------------------------------------
+
+function drawOrigin() {
+	var x = document.forms.myForm;
+	var noview;
+	var txtsvg = "";
+
+
+
+	if (x[0].checked === true) {
+		// draw origin for each View
+		for (noview = 0; noview <= obj.Views.length - 1; noview += 1) {
+
+			txtsvg += "<circle cx=\"" + (obj.Views[noview].Header.Origine.x) + "\"" +
+                              " cy=\"" + (obj.Views[noview].Header.Origine.y) + "\"" +
+                              " r=\"4\" stroke-width=\"0\" fill=\"blue\"/>";
+
+		// Via regular JavaScript
+
+
+			var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle"); 
+			circle.setAttribute("cx", obj.Views[noview].Header.Origine.x);
+			circle.setAttribute("cy", obj.Views[noview].Header.Origine.y);
+			circle.setAttribute("r", 4);
+			circle.setAttribute("fill", "blue");
+			circle.setAttribute("stroke-width", 0);
+			theSvgElement.getElementById("origin").appendChild(circle);
+		}
+	
+	} else if (x[0].checked === false) {
+                var element = theSvgElement.getElementById("origin");
+                while (element.firstChild) {
+                    element.removeChild(element.firstChild);
+                }
+	}
+					   
+	return 0;
+}
 
 
 
