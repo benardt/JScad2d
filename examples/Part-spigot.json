@@ -1,0 +1,325 @@
+{
+  "Header": {
+    "Type": "part",
+    "Name": "Part-spigot",
+    "Title": "Spigot SAEJ2044 6.35",
+    "Unit": "mm",
+    "Scale": 10
+  },
+  "Parameters": {
+    "A": 6.3,
+    "B": 8.75,
+    "C": 1.6,
+    "ID": 3.8,
+    "D": 19.31,
+    "F": 9.5
+  },
+  "Views": [
+    {
+      "Header": {
+        "Origine": {
+          "x": 140,
+          "y": 100
+        },
+        "Name": "Right",
+        "Hatch": {
+          "Color": "red",
+          "Angle": 45,
+          "Distance": 6
+        }
+      },
+      "Shapes": [
+        {
+          "Fill": "hatch",
+          "Points": [
+            {
+              "x": 0,
+              "y": "(ID / 2)",
+              "length": 30,
+              "angle": 30,
+              "r": null
+            },
+            {
+              "x": 0,
+              "y": "(A / 2)",
+              "length": 40,
+              "angle": 30,
+              "r": 1.2
+            },
+            {
+              "x": 19.31,
+              "y": "(A / 2)",
+              "length": 60,
+              "angle": 30,
+              "r": 0.5
+            },
+            {
+              "x": 19.31,
+              "y": "(B / 2)",
+              "length": 12,
+              "angle": 30,
+              "r": 0.8
+            },
+            {
+              "x": "(D + C)",
+              "y": "(B / 2)",
+              "length": 12,
+              "angle": 30,
+              "r": 0.4
+            },
+            {
+              "x": "(D + C)",
+              "y": "(A / 2)",
+              "length": 12,
+              "angle": 30,
+              "r": 0.4
+            },
+            {
+              "x": "(D + C + F)",
+              "y": "(A / 2)",
+              "length": 12,
+              "angle": 30,
+              "r": null
+            },
+            {
+              "x": "(D + C + F)",
+              "y": "(ID / 2)",
+              "length": 12,
+              "angle": 30,
+              "r": null
+            }
+          ]
+        },
+        {
+          "Fill": null,
+          "Points": [
+            {
+              "x": 0,
+              "y": 0,
+              "length": 30,
+              "angle": 30,
+              "r": null
+            },
+            {
+              "x": 0,
+              "y": "(-A / 2)",
+              "length": 40,
+              "angle": 30,
+              "r": 1.2
+            },
+            {
+              "x": 19.31,
+              "y": "(-A / 2)",
+              "length": 60,
+              "angle": 30,
+              "r": 0.5
+            },
+            {
+              "x": 19.31,
+              "y": "(-B / 2)",
+              "length": 12,
+              "angle": 30,
+              "r": 0.8
+            },
+            {
+              "x": "(19.31 + 1.6)",
+              "y": "(-B / 2)",
+              "length": 12,
+              "angle": 30,
+              "r": 0.4
+            },
+            {
+              "x": "(19.31 + 1.6)",
+              "y": "(-A / 2)",
+              "length": 12,
+              "angle": 30,
+              "r": 0.4
+            },
+            {
+              "x": "(19.31 + 1.6 + 9.5)",
+              "y": "(-A / 2)",
+              "length": 12,
+              "angle": 30,
+              "r": null
+            },
+            {
+              "x": "(19.31 + 1.6 + 9.5)",
+              "y": 0,
+              "length": 12,
+              "angle": 30,
+              "r": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Header": {
+        "Origine": {
+          "x": 60,
+          "y": 100
+        },
+        "Name": "Front",
+        "Hatch": {
+          "Color": "blue",
+          "Angle": 45,
+          "Distance": 6
+        }
+      },
+      "Shapes": [
+        {
+          "Fill": null,
+          "Points": [
+            {
+              "x": "(-B / 2)",
+              "y": "(B / 2)",
+              "length": 30,
+              "angle": 30,
+              "r": "(B / 2)"
+            },
+            {
+              "x": "(B / 2)",
+              "y": "(B / 2)",
+              "length": 40,
+              "angle": 30,
+              "r": "(B / 2)"
+            },
+            {
+              "x": "(B / 2)",
+              "y": "(-B / 2)",
+              "length": 60,
+              "angle": 30,
+              "r": "(B / 2)"
+            },
+            {
+              "x": "(-B / 2)",
+              "y": "(-B / 2)",
+              "length": 12,
+              "angle": 30,
+              "r": "(B / 2)"
+            }
+          ]
+        },
+        {
+          "Fill": "hatch",
+          "Points": [
+            {
+              "x": "(-A / 2)",
+              "y": "(A / 2)",
+              "length": 30,
+              "angle": 30,
+              "r": "(A / 2)"
+            },
+            {
+              "x": "(A / 2)",
+              "y": "(A / 2)",
+              "length": 40,
+              "angle": 30,
+              "r": "(A / 2)"
+            },
+            {
+              "x": "(A / 2)",
+              "y": "(-A / 2)",
+              "length": 60,
+              "angle": 30,
+              "r": "(A / 2)"
+            },
+            {
+              "x": "(-A / 2)",
+              "y": "(-A / 2)",
+              "length": 12,
+              "angle": 30,
+              "r": "(A / 2)"
+            }
+          ]
+        },
+        {
+          "Fill": null,
+          "Points": [
+            {
+              "x": "(-ID / 2)",
+              "y": "(ID / 2)",
+              "length": 30,
+              "angle": 30,
+              "r": "(ID / 2)"
+            },
+            {
+              "x": "(ID / 2)",
+              "y": "(ID / 2)",
+              "length": 40,
+              "angle": 30,
+              "r": "(ID / 2)"
+            },
+            {
+              "x": "(ID / 2)",
+              "y": "(-ID / 2)",
+              "length": 60,
+              "angle": 30,
+              "r": "(ID / 2)"
+            },
+            {
+              "x": "(-ID / 2)",
+              "y": "(-ID / 2)",
+              "length": 12,
+              "angle": 30,
+              "r": "(ID / 2)"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Format": {
+    "shape_thick": 3,
+    "font_size": 12,
+    "Hatch_thick": 1,
+    "Dimensions_color": "gold"
+  },
+  "Dimensions": [
+    {
+      "PtStart": {
+        "View": 0,
+        "Shape": 1,
+        "Point": 1
+      },
+      "PtEnd": {
+        "View": 0,
+        "Shape": 1,
+        "Point": 2
+      },
+      "Direction": "horizontal",
+      "Sens": "bottom",
+      "FreeSpace": 60
+    },
+    {
+      "PtStart": {
+        "View": 0,
+        "Shape": 0,
+        "Point": 1
+      },
+      "PtEnd": {
+        "View": 0,
+        "Shape": 0,
+        "Point": 2
+      },
+      "Direction": "horizontal",
+      "Sens": "top",
+      "FreeSpace": 60
+    },
+    {
+      "PtStart": {
+        "View": 1,
+        "Shape": 0,
+        "Point": 0
+      },
+      "PtEnd": {
+        "View": 1,
+        "Shape": 0,
+        "Point": 3
+      },
+      "Direction": "vertical",
+      "Sens": "left",
+      "FreeSpace": 40
+    }
+  ]
+}
