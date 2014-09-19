@@ -51,7 +51,7 @@
     <tr><td  class="menu" colspan="3" >
         squeleton: <input class="messageCheckbox" type="checkbox" value="1" name="mailId[]">&nbsp;
         fillet: <input class="messageCheckbox" type="checkbox" value="2" name="mailId[]">&nbsp;
-       <form id="myForm"> origin: <input class="messageCheckbox" type="checkbox" onclick="drawOrigin()" value="3" name="mailId[]"></form>&nbsp;
+       <form id="myForm"> origin: <input class="messageCheckbox" type="checkbox" onclick="drawOrigin(theObj)" value="3" name="mailId[]"></form>&nbsp;
      </td></tr>
 </table>
 
@@ -72,7 +72,7 @@ function doInitialization() {
 // -------------------------------------------
 // Global variable
 
-    var obj;
+    var theObj;
 
 // ------------------------------------------
     
@@ -81,7 +81,7 @@ function doInitialization() {
 //-------------------------------------------------------------------
 function doUpdate () {
     	
-    obj = editor.get();
+    theObj = editor.get();
 
         
     //var constructor = document.querySelector('.messageCheckbox:checked').value;
@@ -94,8 +94,8 @@ function doUpdate () {
         }
     }
 
-        //document.getElementById("debug").innerHTML = JSON.stringify(json, null, 2);
-        document.getElementById("debug").innerHTML = "Total elements: " + obj.Views.length + "<br>" + 
+    //document.getElementById("debug").innerHTML = JSON.stringify(json, null, 2);
+    document.getElementById("debug").innerHTML = "Total elements: " + theObj.Views.length + "<br>" + 
             "checked box: " + constructor  + "<br>";
         
 
@@ -105,12 +105,36 @@ function doUpdate () {
 
     var noview,
         noshape,
+        nopt,
         i;
     
+    
+    // replace parameters by value and evaluate formula
+    theObj = doDeparam(theObj);
+    
+    // Here place function to find min x & min y & max x & max y to automatize the viewBox behavior
+    var limit = {min:{x:1000000, y:1000000}, max:{x:-100000, y:-1000000}};
+    for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
+	   for (noshape = 0; noshape <= theObj.Views[noview].Shapes.length - 1; noshape += 1) {
+           for (nopt = 0; nopt <= theObj.Views[noview].Shapes[noshape].Points.length - 1; nopt += 1) {
+               limit.min.x = Math.min(limit.min.x, theObj.Views[noview].Shapes[noshape].Points[nopt].x);
+               limit.min.y = Math.min(limit.min.y, theObj.Views[noview].Shapes[noshape].Points[nopt].y);
+               limit.max.x = Math.max(limit.max.x, theObj.Views[noview].Shapes[noshape].Points[nopt].x);
+               limit.max.y = Math.max(limit.max.y, theObj.Views[noview].Shapes[noshape].Points[nopt].y);
+           } // for
+       } // for
+    } // for
+    
+    // alert((theObj.Header.Scale * limit.min.x) + " - " + (theObj.Header.Scale * limit.min.y) + " : " + (theObj.Header.Scale * limit.max.x) + " - " + (theObj.Header.Scale * limit.max.y));
+    
+    
     // cas du zoom
-
     if (typeof theSvgElement === "undefined") {
-           svg = "<svg height=\"400\" width=\"600\" viewBox=\"0 0 400 600\"  xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
+        var strTmp =  (theObj.Header.Scale * limit.min.x) + " " +
+                                            (theObj.Header.Scale * limit.min.y) + " " +
+                                            (theObj.Header.Scale * (limit.max.x - limit.min.x)) + " " +
+                                            (theObj.Header.Scale * (limit.max.y - limit.min.y));
+        svg = "<svg height=\"400\" width=\"600\" viewBox=\"" + strTmp + "\"  xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
     } else {
         var viewBox = theSvgElement.getAttribute('viewBox');	// Grab the object representing the SVG element's viewBox attribute.
         svg = "<svg height=\"400\" width=\"600\" viewBox=\"" + viewBox + "\"  xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
@@ -123,93 +147,42 @@ function doUpdate () {
       
 	svg += "<defs>";
 	svg += "<marker id=\"markerArrowStart\" markerWidth=\"13\" markerHeight=\"13\" refx=\"2\" refy=\"5\"  orient=\"auto\">";
-    svg += "<path d=\"M2,5 L10,9 L10,2 L2,5\" style=\"fill:" + obj.Format.Dimensions_color + ";\" />";
+    svg += "<path d=\"M2,5 L10,9 L10,2 L2,5\" style=\"fill:" + theObj.Format.Dimensions_color + ";\" />";
 	svg += "</marker>";
 	svg += "<marker id=\"markerArrowEnd\" markerWidth=\"13\" markerHeight=\"13\" refx=\"10\" refy=\"5\"  orient=\"auto\">";
-    svg += "<path d=\"M2,2 L2,9 L10,5 L2,2\" style=\"fill:" + obj.Format.Dimensions_color + ";\" />";
+    svg += "<path d=\"M2,2 L2,9 L10,5 L2,2\" style=\"fill:" + theObj.Format.Dimensions_color + ";\" />";
 	svg += "</marker>";
 	svg += "</defs>";
       
     // patern pour hachure
-    for (noview = 0; noview <= obj.Views.length - 1; noview += 1) {
-    if (obj.Views[noview].Header.Hatch.Distance != null) {
+    for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
+    if (theObj.Views[noview].Header.Hatch.Distance != null) {
 		svg += "<defs>";
-		var espacement = obj.Views[noview].Header.Hatch.Distance;
-		svg += "<pattern id=\"diagonalHatch" + "View" + noview + "\" patternUnits=\"userSpaceOnUse\" width=\"" + obj.Views[noview].Header.Hatch.Distance + "\" height=\"" + obj.Views[noview].Header.Hatch.Distance + "\" patternTransform=\"rotate(" + obj.Views[noview].Header.Hatch.Angle + " 2 2)\">";
-		svg += "<path d=\"M -1,2 l 18,0\" stroke=\"" + obj.Views[noview].Header.Hatch.Color + "\" stroke-width=\"" + obj.Format.Hatch_thick + "\"/>";
+		var espacement = theObj.Views[noview].Header.Hatch.Distance;
+		svg += "<pattern id=\"diagonalHatch" + "View" + noview + "\" patternUnits=\"userSpaceOnUse\" width=\"" + theObj.Views[noview].Header.Hatch.Distance + "\" height=\"" + theObj.Views[noview].Header.Hatch.Distance + "\" patternTransform=\"rotate(" + theObj.Views[noview].Header.Hatch.Angle + " 2 2)\">";
+		svg += "<path d=\"M -1,2 l 18,0\" stroke=\"" + theObj.Views[noview].Header.Hatch.Color + "\" stroke-width=\"" + theObj.Format.Hatch_thick + "\"/>";
 		svg += "</pattern>";
 		svg += "</defs>";
 	}
     }
 
 
-    // replace parameters by value and evaluate formula
-
-    var param = [];
     
-    for (var propr in obj.Parameters) {
-           param.push(propr);
-    }
-    
-    // Attention le remplacement ne fonctionne pas toujours
-    // quand le nom d'un paramètre est inclu dans le nom d'un autre
 
-    for (noview = 0; noview <= obj.Views.length - 1; noview += 1) {
-    for (noshape = 0; noshape <= obj.Views[noview].Shapes.length - 1; noshape += 1) {
-	for (i = 0; i <= obj.Views[noview].Shapes[noshape].Points.length - 1; i += 1) {
-		if (typeof obj.Views[noview].Shapes[noshape].Points[i].x == 'string' || obj.Views[noview].Shapes[noshape].Points[i].x instanceof String) {
-			for (var noprop = 0; noprop <= param.length - 1; noprop += 1) {
-				var reg=new RegExp(param[noprop], "g");
-				obj.Views[noview].Shapes[noshape].Points[i].x = obj.Views[noview].Shapes[noshape].Points[i].x.replace(reg, " " + obj.Parameters[param[noprop]]);
-			}		
-		}
-		if (typeof obj.Views[noview].Shapes[noshape].Points[i].y == 'string' || obj.Views[noview].Shapes[noshape].Points[i].y instanceof String) {
-			for (var noprop = 0; noprop <= param.length - 1; noprop += 1) {
-				var reg=new RegExp(param[noprop], "g");
-				obj.Views[noview].Shapes[noshape].Points[i].y = obj.Views[noview].Shapes[noshape].Points[i].y.replace(reg, " " + obj.Parameters[param[noprop]]);
-			}		
-		}
-		if (typeof obj.Views[noview].Shapes[noshape].Points[i].r == 'string' || obj.Views[noview].Shapes[noshape].Points[i].r instanceof String) {
-			for (var noprop = 0; noprop <= param.length - 1; noprop += 1) {
-				var reg=new RegExp(param[noprop], "g");
-				obj.Views[noview].Shapes[noshape].Points[i].r = obj.Views[noview].Shapes[noshape].Points[i].r.replace(reg, " " + obj.Parameters[param[noprop]]);
-			}		
-		}
-	}
-    }
-    }
-
-    for (noview = 0; noview <= obj.Views.length - 1; noview += 1) {
-    for (noshape = 0; noshape <= obj.Views[noview].Shapes.length - 1; noshape += 1) {
-	for (i = 0; i <= obj.Views[noview].Shapes[noshape].Points.length - 1; i += 1) {
-           obj.Views[noview].Shapes[noshape].Points[i].x = mathEval("(" + obj.Views[noview].Shapes[noshape].Points[i].x +")");
-           obj.Views[noview].Shapes[noshape].Points[i].y = mathEval("(" + obj.Views[noview].Shapes[noshape].Points[i].y +")");
-           //alert(obj.Views[noview].Shapes[noshape].Points[i].y);
-           if (obj.Views[noview].Shapes[noshape].Points[i].r !== null) {
-               obj.Views[noview].Shapes[noshape].Points[i].r = mathEval("(" + obj.Views[noview].Shapes[noshape].Points[i].r +")");
-           }
-       }
-    }
-    }
-
-
-        
     // draw shape (with rounded corner if specified)
-    for (noview = 0; noview <= obj.Views.length - 1; noview += 1) {
-	for (noshape = 0; noshape <= obj.Views[noview].Shapes.length - 1; noshape += 1) {
-		svg += Shape(obj.Views[noview].Header.Name,
-                 obj.Views[noview].Shapes[noshape].Points,
-                 obj.Header.Scale, 
-                 obj.Views[noview].Header.Origine,
-                 obj.Views[noview].Shapes[noshape].Fill,
+    for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
+	   for (noshape = 0; noshape <= theObj.Views[noview].Shapes.length - 1; noshape += 1) {
+		  svg += Shape(theObj.Views[noview].Header.Name,
+                 theObj.Views[noview].Shapes[noshape].Points,
+                 theObj.Header.Scale, 
+                 theObj.Views[noview].Header.Origine,
+                 theObj.Views[noview].Shapes[noshape].Fill,
                  noview,
                  constructor,
-                 obj.Format);
-	}
-    }
+                 theObj.Format);
+	   } // for
+    } // for
 
-
-    
 
 
     svg += "\n<g id=\"dimension\"></g>";
@@ -218,38 +191,39 @@ function doUpdate () {
     document.getElementById("drawing").innerHTML = svg;
     theSvgElement = document.getElementsByTagName("svg")[0];
 
+
     // draw dimension
 
-    for (var nodim = 0; nodim <= obj.Dimensions.length - 1; nodim += 1) {
-	svg += drawDimension(theSvgElement, obj, obj.Dimensions[nodim]);
+    for (var nodim = 0; nodim <= theObj.Dimensions.length - 1; nodim += 1) {
+	   svg += drawDimension(theSvgElement, theObj, theObj.Dimensions[nodim]);
     } // for
 
-    drawOrigin();
+    drawOrigin(theObj);
 
     //window.setTimeout(doUpdate, 250);       // loop for live print not use with event handler
 }
-   
 
  
 // ------------------------------------------------
 // function: Draw origin
+// draw a filled circle at each view origin
+// input : objet = the Object json file
 // ------------------------------------------------
 
-function drawOrigin() {
+function drawOrigin(objet) {
 	var x = document.forms.myForm;
 	var noview;
 	var txtsvg = "";
 
-
+    var currview = objet.Views;
 
 	if (x[0].checked === true) {
 		// draw origin for each View
-		for (noview = 0; noview <= obj.Views.length - 1; noview += 1) {
-
+		for (noview = 0; noview <= currview.length - 1; noview += 1) {
 
 			var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle"); 
-			circle.setAttribute("cx", obj.Views[noview].Header.Origine.x);
-			circle.setAttribute("cy", obj.Views[noview].Header.Origine.y);
+			circle.setAttribute("cx", currview[noview].Header.Origine.x);
+			circle.setAttribute("cy", currview[noview].Header.Origine.y);
 			circle.setAttribute("r", 4);
 			circle.setAttribute("fill", "blue");
 			circle.setAttribute("stroke-width", 0);

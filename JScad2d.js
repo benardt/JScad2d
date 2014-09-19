@@ -21,6 +21,73 @@ function Point(x, y, r) {
 }
 
 
+// ------------------------------------------------
+// function: do de-parametrization
+// replace all parameters by the right number value
+// input : objet = the Object json file
+// ------------------------------------------------
+function doDeparam(objet) {
+    
+    
+    var param = [];
+    
+    // place all object parameters in a table
+    for (var propr in theObj.Parameters) {
+           param.push(propr);
+    }
+    
+    // Attention le remplacement ne fonctionne pas toujours
+    // quand le nom d'un paramètre est inclu dans le nom d'un autre
+
+    // 1st replace string (parameter) by number (value)
+    // all views
+    for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
+        var currshapes = objet.Views[noview].Shapes;
+        // all shapes of current view
+        for (noshape = 0; noshape <= currshapes.length - 1; noshape += 1) {
+            // all points of current shape of current view
+	       for (i = 0; i <= currshapes[noshape].Points.length - 1; i += 1) {
+		      if (typeof currshapes[noshape].Points[i].x == 'string' || currshapes[noshape].Points[i].x instanceof String) {
+			     for (var noprop = 0; noprop <= param.length - 1; noprop += 1) {
+				    var reg=new RegExp(param[noprop], "g");
+				    currshapes[noshape].Points[i].x = currshapes[noshape].Points[i].x.replace(reg, " " + theObj.Parameters[param[noprop]]);
+			         } // for
+		      } // if
+		      if (typeof currshapes[noshape].Points[i].y == 'string' || currshapes[noshape].Points[i].y instanceof String) {
+			     for (var noprop = 0; noprop <= param.length - 1; noprop += 1) {
+				    var reg=new RegExp(param[noprop], "g");
+				    currshapes[noshape].Points[i].y = currshapes[noshape].Points[i].y.replace(reg, " " + theObj.Parameters[param[noprop]]);
+			     } // for
+		      } // if
+		      if (typeof currshapes[noshape].Points[i].r == 'string' || currshapes[noshape].Points[i].r instanceof String) {
+			     for (var noprop = 0; noprop <= param.length - 1; noprop += 1) {
+				    var reg=new RegExp(param[noprop], "g");
+				    currshapes[noshape].Points[i].r = currshapes[noshape].Points[i].r.replace(reg, " " + theObj.Parameters[param[noprop]]);
+			     } // for
+		      } // if
+	       } // for
+        } // for
+    } // for
+    
+    // 2nd evaluate formula
+    for (noview = 0; noview <= objet.Views.length - 1; noview += 1) {
+        currshapes = theObj.Views[noview].Shapes;
+        for (noshape = 0; noshape <= currshapes.length - 1; noshape += 1) {
+	       for (i = 0; i <= currshapes[noshape].Points.length - 1; i += 1) {
+                currshapes[noshape].Points[i].x = mathEval("(" + currshapes[noshape].Points[i].x +")");
+                currshapes[noshape].Points[i].y = mathEval("(" + currshapes[noshape].Points[i].y +")");
+                
+                if (currshapes[noshape].Points[i].r !== null) {
+                    currshapes[noshape].Points[i].r = mathEval("(" + currshapes[noshape].Points[i].r +")");
+                } // if
+            } // for
+        } // for
+    } // for
+    
+    return objet;
+}
+
+
 // --------------------------------------------------
 // Function
 // Return the length of string in pixels
