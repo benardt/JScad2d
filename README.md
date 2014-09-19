@@ -13,7 +13,7 @@ Draw parts and assemble them in an assembly drawing. Parts and Assy drawing are 
 
 ## Features
 
-
+* Full parametric modeling
 * Draw any shape
 * Make fillet
 * Fill shape with hatch
