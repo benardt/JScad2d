@@ -27,13 +27,20 @@ function Point(x, y, r) {
 // input : objet = the Object json file
 // ------------------------------------------------
 function doDeparam(objet) {
+    "use strict";
     
-    
-    var param = [];
+    var i,
+        param = [],
+        propr,
+        noview,
+        noshape,
+        noprop,
+        reg,
+        currshapes;
     
     // place all object parameters in a table
-    for (var propr in theObj.Parameters) {
-           param.push(propr);
+    for (propr in objet.Parameters) {
+        param.push(propr);
     }
     
     // Attention le remplacement ne fonctionne pas toujours
@@ -41,44 +48,44 @@ function doDeparam(objet) {
 
     // 1st replace string (parameter) by number (value)
     // all views
-    for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
-        var currshapes = objet.Views[noview].Shapes;
+    for (noview = 0; noview <= objet.Views.length - 1; noview += 1) {
+        currshapes = objet.Views[noview].Shapes;
         // all shapes of current view
         for (noshape = 0; noshape <= currshapes.length - 1; noshape += 1) {
             // all points of current shape of current view
-	       for (i = 0; i <= currshapes[noshape].Points.length - 1; i += 1) {
-		      if (typeof currshapes[noshape].Points[i].x == 'string' || currshapes[noshape].Points[i].x instanceof String) {
-			     for (var noprop = 0; noprop <= param.length - 1; noprop += 1) {
-				    var reg=new RegExp(param[noprop], "g");
-				    currshapes[noshape].Points[i].x = currshapes[noshape].Points[i].x.replace(reg, " " + theObj.Parameters[param[noprop]]);
-			         } // for
-		      } // if
-		      if (typeof currshapes[noshape].Points[i].y == 'string' || currshapes[noshape].Points[i].y instanceof String) {
-			     for (var noprop = 0; noprop <= param.length - 1; noprop += 1) {
-				    var reg=new RegExp(param[noprop], "g");
-				    currshapes[noshape].Points[i].y = currshapes[noshape].Points[i].y.replace(reg, " " + theObj.Parameters[param[noprop]]);
-			     } // for
-		      } // if
-		      if (typeof currshapes[noshape].Points[i].r == 'string' || currshapes[noshape].Points[i].r instanceof String) {
-			     for (var noprop = 0; noprop <= param.length - 1; noprop += 1) {
-				    var reg=new RegExp(param[noprop], "g");
-				    currshapes[noshape].Points[i].r = currshapes[noshape].Points[i].r.replace(reg, " " + theObj.Parameters[param[noprop]]);
-			     } // for
-		      } // if
-	       } // for
+	        for (i = 0; i <= currshapes[noshape].Points.length - 1; i += 1) {
+		        if (typeof currshapes[noshape].Points[i].x === 'string' || currshapes[noshape].Points[i].x instanceof String) {
+			        for (noprop = 0; noprop <= param.length - 1; noprop += 1) {
+				        reg = new RegExp(param[noprop], "g");
+				        currshapes[noshape].Points[i].x = currshapes[noshape].Points[i].x.replace(reg, " " + objet.Parameters[param[noprop]]);
+                    } // for
+		        } // if
+		        if (typeof currshapes[noshape].Points[i].y === 'string' || currshapes[noshape].Points[i].y instanceof String) {
+			        for (noprop = 0; noprop <= param.length - 1; noprop += 1) {
+				        reg = new RegExp(param[noprop], "g");
+				        currshapes[noshape].Points[i].y = currshapes[noshape].Points[i].y.replace(reg, " " + objet.Parameters[param[noprop]]);
+			        } // for
+		        } // if
+		        if (typeof currshapes[noshape].Points[i].r === 'string' || currshapes[noshape].Points[i].r instanceof String) {
+			        for (noprop = 0; noprop <= param.length - 1; noprop += 1) {
+				        reg = new RegExp(param[noprop], "g");
+				        currshapes[noshape].Points[i].r = currshapes[noshape].Points[i].r.replace(reg, " " + objet.Parameters[param[noprop]]);
+			        } // for
+		        } // if
+	        } // for
         } // for
     } // for
     
     // 2nd evaluate formula
     for (noview = 0; noview <= objet.Views.length - 1; noview += 1) {
-        currshapes = theObj.Views[noview].Shapes;
+        currshapes = objet.Views[noview].Shapes;
         for (noshape = 0; noshape <= currshapes.length - 1; noshape += 1) {
-	       for (i = 0; i <= currshapes[noshape].Points.length - 1; i += 1) {
-                currshapes[noshape].Points[i].x = mathEval("(" + currshapes[noshape].Points[i].x +")");
-                currshapes[noshape].Points[i].y = mathEval("(" + currshapes[noshape].Points[i].y +")");
+	        for (i = 0; i <= currshapes[noshape].Points.length - 1; i += 1) {
+                currshapes[noshape].Points[i].x = mathEval("(" + currshapes[noshape].Points[i].x + ")");
+                currshapes[noshape].Points[i].y = mathEval("(" + currshapes[noshape].Points[i].y + ")");
                 
                 if (currshapes[noshape].Points[i].r !== null) {
-                    currshapes[noshape].Points[i].r = mathEval("(" + currshapes[noshape].Points[i].r +")");
+                    currshapes[noshape].Points[i].r = mathEval("(" + currshapes[noshape].Points[i].r + ")");
                 } // if
             } // for
         } // for
@@ -242,7 +249,7 @@ function Shape() {
 	
 	// texture de la forme
 	if (texture === "hatch") {
-		ttexte += "z\" fill=\"url(#diagonalHatch" + "View" + noview +")\" stroke=\"black\" stroke-width=\"2\" /></g>";
+		ttexte += "z\" fill=\"url(#diagonalHatch" + "View" + noview + ")\" stroke=\"black\" stroke-width=\"2\" /></g>";
 	} else {
 		ttexte += "z\" fill=\"white\" stroke=\"black\" stroke-width=\"2\" /></g>";
 	}
@@ -378,31 +385,37 @@ function mathEval(exp) {
 function drawDimension(theSvgElement, objet, dim) {
     "use strict";
 	var eloignement = 5,            // length in pixel between shape and attach line
-            longueur = dim.FreeSpace,   // length in pixel between dimension line and shape
+        longueur = dim.FreeSpace,   // length in pixel between dimension line and shape
 
-            PtStart = objet.Views[dim.PtStart.View].Shapes[dim.PtStart.Shape].Points[dim.PtStart.Point],
-            PtEnd = objet.Views[dim.PtEnd.View].Shapes[dim.PtEnd.Shape].Points[dim.PtEnd.Point],
-            Ori = objet.Views[dim.PtStart.View].Header.Origine,
-            scale = objet.Header.Scale,
+        PtStart = objet.Views[dim.PtStart.View].Shapes[dim.PtStart.Shape].Points[dim.PtStart.Point],
+        PtEnd = objet.Views[dim.PtEnd.View].Shapes[dim.PtEnd.Shape].Points[dim.PtEnd.Point],
+        Ori = objet.Views[dim.PtStart.View].Header.Origine,
+        scale = objet.Header.Scale,
         
-            maxy, maxx,                 // needed to dimension location
-            stringtoprint,              // text to print
-            sens;                       // side to draw dimension up or down / left or right
+        maxy,
+        maxx,                 // needed to dimension location
+        stringtoprint,              // text to print
+        sens,                       // side to draw dimension up or down / left or right
+    
+        line1,
+        line2,
+        line3,
+        text1;
 
-     switch (dim.Sens) {
-     case "top":
-         sens = 1;
-         break;
-     case "bottom":
-         sens = -1;
-         break;
-     case "left":
-         sens = -1;
-         break;
-     case "right":
-         sens = 1;
-         break;
-     } // switch
+    switch (dim.Sens) {
+    case "top":
+        sens = 1;
+        break;
+    case "bottom":
+        sens = -1;
+        break;
+    case "left":
+        sens = -1;
+        break;
+    case "right":
+        sens = 1;
+        break;
+    } // switch
 	
 
 	if (dim.Direction === "vertical") {
@@ -410,40 +423,40 @@ function drawDimension(theSvgElement, objet, dim) {
 	    maxx = Math.max(scale * PtStart.x + sens * longueur, scale * PtEnd.x + sens * longueur);
 		
 	    // lignes d'attache (Start side)
-	    var line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line1.setAttribute("x1", Ori.x + scale * PtStart.x + sens * eloignement);
-            line1.setAttribute("y1", Ori.y - (scale * PtStart.y));
-            line1.setAttribute("x2", Ori.x + maxx);
-            line1.setAttribute("y2", Ori.y - (scale * PtStart.y));
-            line1.setAttribute("stroke", objet.Format.Dimensions_color);
-            theSvgElement.getElementById("dimension").appendChild(line1);
+	    line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line1.setAttribute("x1", Ori.x + scale * PtStart.x + sens * eloignement);
+        line1.setAttribute("y1", Ori.y - (scale * PtStart.y));
+        line1.setAttribute("x2", Ori.x + maxx);
+        line1.setAttribute("y2", Ori.y - (scale * PtStart.y));
+        line1.setAttribute("stroke", objet.Format.Dimensions_color);
+        theSvgElement.getElementById("dimension").appendChild(line1);
 
 	    // lignes d'attache (End side)
-	    var line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line2.setAttribute("x1", Ori.x + scale * PtEnd.x + sens * eloignement);
-            line2.setAttribute("y1", Ori.y - (scale * PtEnd.y));
-            line2.setAttribute("x2", Ori.x + maxx);
-            line2.setAttribute("y2", Ori.y - (scale * PtEnd.y));
-            line2.setAttribute("stroke", objet.Format.Dimensions_color);
-            theSvgElement.getElementById("dimension").appendChild(line2);
+	    line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line2.setAttribute("x1", Ori.x + scale * PtEnd.x + sens * eloignement);
+        line2.setAttribute("y1", Ori.y - (scale * PtEnd.y));
+        line2.setAttribute("x2", Ori.x + maxx);
+        line2.setAttribute("y2", Ori.y - (scale * PtEnd.y));
+        line2.setAttribute("stroke", objet.Format.Dimensions_color);
+        theSvgElement.getElementById("dimension").appendChild(line2);
 
 		// Global line
-	    var line3 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line3.setAttribute("x1", Ori.x + (maxx - sens * eloignement));
-            line3.setAttribute("y1", Ori.y - (scale * PtStart.y));
-            line3.setAttribute("x2", Ori.x + (maxx - sens * eloignement));
-            line3.setAttribute("y2", Ori.y - (scale * PtEnd.y));
-            line3.setAttribute("stroke", objet.Format.Dimensions_color);
+	    line3 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line3.setAttribute("x1", Ori.x + (maxx - sens * eloignement));
+        line3.setAttribute("y1", Ori.y - (scale * PtStart.y));
+        line3.setAttribute("x2", Ori.x + (maxx - sens * eloignement));
+        line3.setAttribute("y2", Ori.y - (scale * PtEnd.y));
+        line3.setAttribute("stroke", objet.Format.Dimensions_color);
 	    line3.setAttribute('marker-start', 'url(#markerArrowStart)');
 	    line3.setAttribute('marker-end', 'url(#markerArrowEnd)');
-            theSvgElement.getElementById("dimension").appendChild(line3);
+        theSvgElement.getElementById("dimension").appendChild(line3);
 
 		// text
 		stringtoprint = (Math.abs((PtEnd.y - PtStart.y)) + " " + objet.Header.Unit);
 
-	    var text1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+	    text1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
 	    // need some special formula to take into account the height of font
-	    text1.setAttribute("x", Ori.x + (maxx - sens * eloignement) +  0.5 * objet.Format.font_size * (0.35146/25.4) * 96);
+	    text1.setAttribute("x", Ori.x + (maxx - sens * eloignement) +  0.5 * objet.Format.font_size * (0.35146 / 25.4) * 96);
 	    text1.setAttribute("text-anchor", "middle");
 	    text1.setAttribute("style", "writing-mode: tb;");
 	    text1.setAttribute("y", Ori.y - scale * (PtStart.y + PtEnd.y) / 2);
@@ -456,41 +469,41 @@ function drawDimension(theSvgElement, objet, dim) {
 		maxy = Math.max(scale * PtStart.y + sens * longueur, scale * PtEnd.y + sens * longueur);
 
 	    // lignes d'attache (Start side)
-	    var line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line1.setAttribute("x1", Ori.x + scale * PtStart.x);
-            line1.setAttribute("y1", Ori.y - (scale * PtStart.y + sens * eloignement));
-            line1.setAttribute("x2", Ori.x + scale * PtStart.x);
-            line1.setAttribute("y2", Ori.y - maxy);
-            line1.setAttribute("stroke", objet.Format.Dimensions_color);
-            theSvgElement.getElementById("dimension").appendChild(line1);
+	    line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line1.setAttribute("x1", Ori.x + scale * PtStart.x);
+        line1.setAttribute("y1", Ori.y - (scale * PtStart.y + sens * eloignement));
+        line1.setAttribute("x2", Ori.x + scale * PtStart.x);
+        line1.setAttribute("y2", Ori.y - maxy);
+        line1.setAttribute("stroke", objet.Format.Dimensions_color);
+        theSvgElement.getElementById("dimension").appendChild(line1);
 
 	    // lignes d'attache (End side)
-	    var line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line2.setAttribute("x1", Ori.x + scale * PtEnd.x);
-            line2.setAttribute("y1", Ori.y - (scale * PtEnd.y + sens * eloignement));
-            line2.setAttribute("x2", Ori.x + scale * PtEnd.x);
-            line2.setAttribute("y2", Ori.y - maxy);
-            line2.setAttribute("stroke", objet.Format.Dimensions_color);
-            theSvgElement.getElementById("dimension").appendChild(line2);
+	    line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line2.setAttribute("x1", Ori.x + scale * PtEnd.x);
+        line2.setAttribute("y1", Ori.y - (scale * PtEnd.y + sens * eloignement));
+        line2.setAttribute("x2", Ori.x + scale * PtEnd.x);
+        line2.setAttribute("y2", Ori.y - maxy);
+        line2.setAttribute("stroke", objet.Format.Dimensions_color);
+        theSvgElement.getElementById("dimension").appendChild(line2);
 		
 		// Global line
-	    var line3 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line3.setAttribute("x1", Ori.x + scale * PtStart.x);
-            line3.setAttribute("y1", Ori.y - (maxy - sens * eloignement));
-            line3.setAttribute("x2", Ori.x + scale * PtEnd.x);
-            line3.setAttribute("y2", Ori.y - (maxy - sens * eloignement));
-            line3.setAttribute("stroke", objet.Format.Dimensions_color);
+	    line3 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line3.setAttribute("x1", Ori.x + scale * PtStart.x);
+        line3.setAttribute("y1", Ori.y - (maxy - sens * eloignement));
+        line3.setAttribute("x2", Ori.x + scale * PtEnd.x);
+        line3.setAttribute("y2", Ori.y - (maxy - sens * eloignement));
+        line3.setAttribute("stroke", objet.Format.Dimensions_color);
 	    line3.setAttribute('marker-start', 'url(#markerArrowStart)');
 	    line3.setAttribute('marker-end', 'url(#markerArrowEnd)');
-            theSvgElement.getElementById("dimension").appendChild(line3);
+        theSvgElement.getElementById("dimension").appendChild(line3);
 		
 		// text
 		stringtoprint = (PtEnd.x - PtStart.x + " " + objet.Header.Unit);
 
-	    var text1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+	    text1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
 	    text1.setAttribute("x", Ori.x + scale * (PtStart.x + PtEnd.x) / 2);
 	    text1.setAttribute("text-anchor", "middle");
-	    text1.setAttribute("y", Ori.y - (maxy - 0.5 * (1 - sens) * objet.Format.font_size * (0.35146/25.4) * 96));
+	    text1.setAttribute("y", Ori.y - (maxy - 0.5 * (1 - sens) * objet.Format.font_size * (0.35146 / 25.4) * 96));
 	    text1.setAttribute("fill", objet.Format.Dimensions_color);
 	    text1.setAttribute("font-size", objet.Format.font_size);
 	    text1.textContent = stringtoprint;

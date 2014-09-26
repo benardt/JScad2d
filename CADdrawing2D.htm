@@ -19,83 +19,90 @@
 	<script src="./filereader/filereader.js"></script>
 	<script src="./JScad2d.js"></script>
 	<script src="./zoom.js"></script>
+    <script src="./behavior.js"></script>
 </head>
 <body>
 <table border="0">
-    <tr><td rowspan="3"><img src="./img/ruler-triangle-48.png" /></td><td class="menu">Load a JSON file: </td>         <td class="menu"><input type="file" id="loadDocument" value="Load" name="f3" class="f3"/></td>
-    <td rowspan="4"><div id="drawing"></div></td>
+    <tr>
+        <td rowspan="3"><img src="./img/ruler-triangle-48.png" /></td>
+        <td class="menu">Load a JSON file: </td>
+        <td class="menu"><input type="file" id="loadDocument" value="Load" name="f3" class="f3"/></td>
+        <td rowspan="4"><div id="drawing"></div></td>
     </tr>
     <tr>
-	<td class="menu">Save file to: </td><td class="menu"><button onclick="saveTextAsFile()" >JSON</button>&nbsp;<button onclick="saveTextAsSVG()" >SVG</button></td>
+        <td class="menu">Save file to: </td>
+        <td class="menu"><button onclick="saveTextAsFile()" >JSON</button>&nbsp;<button onclick="saveTextAsSVG()" >SVG</button></td>
     </tr>
     <tr>
-           <td class="menu">
-	      <button type="button" onclick="zoom('zoomIn');">Zoom In</button>
-	      <button type="button" onclick="zoom('zoomOut');">Zoom Out</button>
-           </td>
-           <td class="menu">
-	      <button type="button" onclick="pan('left');">&#8678;</button>
-              <button type="button" onclick="pan('up');">&#8679;</button>
-              <button type="button" onclick="pan('down');">&#8681;</button>
-              <button type="button" onclick="pan('right');">&#8680;</button>
-           </td>
+        <td class="menu">
+            <button type="button" onclick="zoom('zoomIn');">Zoom In</button>
+            <button type="button" onclick="zoom('zoomOut');">Zoom Out</button>
+        </td>
+        <td class="menu">
+            <button type="button" onclick="pan('left');">&#8678;</button>
+            <button type="button" onclick="pan('up');">&#8679;</button>
+            <button type="button" onclick="pan('down');">&#8681;</button>
+            <button type="button" onclick="pan('right');">&#8680;</button>
+        </td>
     </tr>
     <tr>
-    <td colspan="3"><div id="jsoneditor" style="width: 450px; height: 400px;" ></div>	</td>
+        <td colspan="3"><div id="jsoneditor" style="width: 450px; height: 400px;" ></div></td>
     </tr>
     <tr>
         <td class="menu" colspan="3" ><h3>Debug section:</h3><br><div id="debug"></div></td>
     </tr>
-    
-    
-    <tr><td  class="menu" colspan="3" >
+    <tr>
+        <td  class="menu" colspan="3" >
         squeleton: <input class="messageCheckbox" type="checkbox" value="1" name="mailId[]">&nbsp;
         fillet: <input class="messageCheckbox" type="checkbox" value="2" name="mailId[]">&nbsp;
        <form id="myForm"> origin: <input class="messageCheckbox" type="checkbox" onclick="drawOrigin(theObj)" value="3" name="mailId[]"></form>&nbsp;
      </td></tr>
 </table>
+    
 
-
-<script type="text/javascript" >
-    // create the editor
-    var container = document.getElementById("jsoneditor");
-    var editor = new JSONEditor(container);
-
-
-//-------------------------------------------------------------------
-function doInitialization() {
-    doUpdate();
-    document.body.addEventListener("keyup",doUpdate, false);
-
-}
-
+<script type="text/javascript">
+    
+// create the editor
+var container = document.getElementById("jsoneditor");
+var editor = new JSONEditor(container);
+    
 // -------------------------------------------
 // Global variable
 
-    var theObj;
+var theObj;
 
 // ------------------------------------------
+    
+
+//-------------------------------------------------------------------
+function doInitialization() {
+    "use strict";
+    doUpdate();
+    document.body.addEventListener("keyup", doUpdate, false);
+
+}
     
 //-------------------------------------------------------------------
 // Main function
 //-------------------------------------------------------------------
-function doUpdate () {
-    	
+function doUpdate() {
+    "use strict";
     theObj = editor.get();
 
         
     //var constructor = document.querySelector('.messageCheckbox:checked').value;
-    var constructor = null; 
-    var inputElements = document.getElementsByClassName('messageCheckbox');
-    for(var i=0; inputElements[i]; ++i){
-        if(inputElements[i].checked){
+    var i,
+        constructor = null,
+        inputElements = document.getElementsByClassName('messageCheckbox');
+    for (i = 0; inputElements[i]; i += 1) {
+        if (inputElements[i].checked) {
             constructor = 1 * inputElements[i].value;
             break;
         }
     }
 
     //document.getElementById("debug").innerHTML = JSON.stringify(json, null, 2);
-    document.getElementById("debug").innerHTML = "Total elements: " + theObj.Views.length + "<br>" + 
+    document.getElementById("debug").innerHTML = "Total elements: " + theObj.Views.length + "<br>" +
             "checked box: " + constructor  + "<br>";
         
 
@@ -106,23 +113,26 @@ function doUpdate () {
     var noview,
         noshape,
         nopt,
-        i;
+        strTmp,
+        svg,
+        nodim,
+        limit = {};
     
     
     // replace parameters by value and evaluate formula
     theObj = doDeparam(theObj);
     
     // Here place function to find min x & min y & max x & max y to automatize the viewBox behavior
-    var limit = {min:{x:1000000, y:1000000}, max:{x:-100000, y:-1000000}};
+    limit = {min: {x: 1000000, y: 1000000}, max: {x: -100000, y: -1000000}};
     for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
-	   for (noshape = 0; noshape <= theObj.Views[noview].Shapes.length - 1; noshape += 1) {
-           for (nopt = 0; nopt <= theObj.Views[noview].Shapes[noshape].Points.length - 1; nopt += 1) {
-               limit.min.x = Math.min(limit.min.x, theObj.Views[noview].Shapes[noshape].Points[nopt].x);
-               limit.min.y = Math.min(limit.min.y, theObj.Views[noview].Shapes[noshape].Points[nopt].y);
-               limit.max.x = Math.max(limit.max.x, theObj.Views[noview].Shapes[noshape].Points[nopt].x);
-               limit.max.y = Math.max(limit.max.y, theObj.Views[noview].Shapes[noshape].Points[nopt].y);
-           } // for
-       } // for
+	    for (noshape = 0; noshape <= theObj.Views[noview].Shapes.length - 1; noshape += 1) {
+            for (nopt = 0; nopt <= theObj.Views[noview].Shapes[noshape].Points.length - 1; nopt += 1) {
+                limit.min.x = Math.min(limit.min.x, theObj.Views[noview].Shapes[noshape].Points[nopt].x);
+                limit.min.y = Math.min(limit.min.y, theObj.Views[noview].Shapes[noshape].Points[nopt].y);
+                limit.max.x = Math.max(limit.max.x, theObj.Views[noview].Shapes[noshape].Points[nopt].x);
+                limit.max.y = Math.max(limit.max.y, theObj.Views[noview].Shapes[noshape].Points[nopt].y);
+            } // for
+        } // for
     } // for
     
     // alert((theObj.Header.Scale * limit.min.x) + " - " + (theObj.Header.Scale * limit.min.y) + " : " + (theObj.Header.Scale * limit.max.x) + " - " + (theObj.Header.Scale * limit.max.y));
@@ -130,7 +140,7 @@ function doUpdate () {
     
     // cas du zoom
     if (typeof theSvgElement === "undefined") {
-        var strTmp =  (theObj.Header.Scale * limit.min.x) + " " +
+        strTmp =  (theObj.Header.Scale * limit.min.x) + " " +
                                             (theObj.Header.Scale * limit.min.y) + " " +
                                             (theObj.Header.Scale * (limit.max.x - limit.min.x)) + " " +
                                             (theObj.Header.Scale * (limit.max.y - limit.min.y));
@@ -156,14 +166,20 @@ function doUpdate () {
       
     // patern pour hachure
     for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
-    if (theObj.Views[noview].Header.Hatch.Distance != null) {
-		svg += "<defs>";
-		var espacement = theObj.Views[noview].Header.Hatch.Distance;
-		svg += "<pattern id=\"diagonalHatch" + "View" + noview + "\" patternUnits=\"userSpaceOnUse\" width=\"" + theObj.Views[noview].Header.Hatch.Distance + "\" height=\"" + theObj.Views[noview].Header.Hatch.Distance + "\" patternTransform=\"rotate(" + theObj.Views[noview].Header.Hatch.Angle + " 2 2)\">";
-		svg += "<path d=\"M -1,2 l 18,0\" stroke=\"" + theObj.Views[noview].Header.Hatch.Color + "\" stroke-width=\"" + theObj.Format.Hatch_thick + "\"/>";
-		svg += "</pattern>";
-		svg += "</defs>";
-	}
+        if (theObj.Views[noview].Header.Hatch.Distance !== null) {
+		    svg += "<defs>";
+            var espacement = theObj.Views[noview].Header.Hatch.Distance;
+            svg += "<pattern id=\"diagonalHatch" + "View" + noview + "\" " +
+                    "patternUnits=\"userSpaceOnUse\" " +
+                    "width=\"" + theObj.Views[noview].Header.Hatch.Distance + "\" " +
+                    "height=\"" + theObj.Views[noview].Header.Hatch.Distance + "\" " +
+                    "patternTransform=\"rotate(" + theObj.Views[noview].Header.Hatch.Angle + " 2 2)\">";
+            svg += "<path d=\"M -1,2 l 18,0\" " +
+                    "stroke=\"" + theObj.Views[noview].Header.Hatch.Color + "\" " +
+                    "stroke-width=\"" + theObj.Format.Hatch_thick + "\"/>";
+            svg += "</pattern>";
+            svg += "</defs>";
+	    }
     }
 
 
@@ -171,16 +187,16 @@ function doUpdate () {
 
     // draw shape (with rounded corner if specified)
     for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
-	   for (noshape = 0; noshape <= theObj.Views[noview].Shapes.length - 1; noshape += 1) {
-		  svg += Shape(theObj.Views[noview].Header.Name,
+	    for (noshape = 0; noshape <= theObj.Views[noview].Shapes.length - 1; noshape += 1) {
+		    svg += Shape(theObj.Views[noview].Header.Name,
                  theObj.Views[noview].Shapes[noshape].Points,
-                 theObj.Header.Scale, 
+                 theObj.Header.Scale,
                  theObj.Views[noview].Header.Origine,
                  theObj.Views[noview].Shapes[noshape].Fill,
                  noview,
                  constructor,
                  theObj.Format);
-	   } // for
+	    } // for
     } // for
 
 
@@ -194,8 +210,8 @@ function doUpdate () {
 
     // draw dimension
 
-    for (var nodim = 0; nodim <= theObj.Dimensions.length - 1; nodim += 1) {
-	   svg += drawDimension(theSvgElement, theObj, theObj.Dimensions[nodim]);
+    for (nodim = 0; nodim <= theObj.Dimensions.length - 1; nodim += 1) {
+	    svg += drawDimension(theSvgElement, theObj, theObj.Dimensions[nodim]);
     } // for
 
     drawOrigin(theObj);
@@ -211,17 +227,19 @@ function doUpdate () {
 // ------------------------------------------------
 
 function drawOrigin(objet) {
-	var x = document.forms.myForm;
-	var noview;
-	var txtsvg = "";
+    "use strict";
+    
+	var x = document.forms.myForm,
+        noview,
+        txtsvg = "",
 
-    var currview = objet.Views;
+        currview = objet.Views;
 
 	if (x[0].checked === true) {
 		// draw origin for each View
 		for (noview = 0; noview <= currview.length - 1; noview += 1) {
 
-			var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle"); 
+			var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 			circle.setAttribute("cx", currview[noview].Header.Origine.x);
 			circle.setAttribute("cy", currview[noview].Header.Origine.y);
 			circle.setAttribute("r", 4);
@@ -231,10 +249,10 @@ function drawOrigin(objet) {
 		}
 	
 	} else if (x[0].checked === false) {
-                var element = theSvgElement.getElementById("origin");
-                while (element.firstChild) {
-                    element.removeChild(element.firstChild);
-                }
+        var element = theSvgElement.getElementById("origin");
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
 	}
 					   
 	return 0;
@@ -243,16 +261,16 @@ function drawOrigin(objet) {
 
 
 // Load a JSON document
-  FileReaderJS.setupInput(document.getElementById('loadDocument'), {
+FileReaderJS.setupInput(document.getElementById('loadDocument'), {
     readAsDefault: 'Text',
     on: {
-      load: function (event, file) {
-        editor.setText(event.target.result);
-        //doUpdate();
-	doInitialization();
-      }
+        load: function (event, file) {
+            editor.setText(event.target.result);
+            //doUpdate();
+            doInitialization();
+        }
     }
-  });
+});
   
   
 // save as SVG
@@ -262,7 +280,7 @@ function saveTextAsSVG() {
 	var json = editor.get();
 	var textToWrite = document.getElementById("drawing").innerHTML;
 	
-	var textFileAsBlob = new Blob([textToWrite], {type:'text/plain'});
+	var textFileAsBlob = new Blob([textToWrite], {type: 'text/plain'});
 	var fileNameToSaveAs = json.Header.Name + "_svg.svg";
 	
 	
@@ -270,14 +288,11 @@ function saveTextAsSVG() {
 	var downloadLink = document.createElement("a");
 	downloadLink.download = fileNameToSaveAs;
 	downloadLink.innerHTML = "Download File";
-	if (window.webkitURL != null)
-	{
+	if (window.webkitURL !== null) {
 		// Chrome allows the link to be clicked
 		// without actually adding it to the DOM.
 		downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
-	}
-	else
-	{
+    } else {
 		// Firefox requires the link to be added to the DOM
 		// before it can be clicked.
 		
@@ -292,27 +307,25 @@ function saveTextAsSVG() {
 }
   
 // save file
-function saveTextAsFile()
-{
+function saveTextAsFile() {
+    "use strcit";
+    
 	//var textToWrite = document.getElementById("inputTextToSave").value;
 	var json = editor.get();
 	var textToWrite = JSON.stringify(json, null, 2);
 	
-	var textFileAsBlob = new Blob([textToWrite], {type:'text/plain'});
-	var fileNameToSaveAs = json.Header.Name + ".json";
+	var textFileAsBlob = new Blob([textToWrite], {type: 'text/plain'});
+    var fileNameToSaveAs = json.Header.Name + ".json";
 	
 	
 	var downloadLink = document.createElement("a");
 	downloadLink.download = fileNameToSaveAs;
 	downloadLink.innerHTML = "Download File";
-	if (window.webkitURL != null)
-	{
+	if (window.webkitURL !== null) {
 		// Chrome allows the link to be clicked
 		// without actually adding it to the DOM.
 		downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
-	}
-	else
-	{
+	} else {
 		// Firefox requires the link to be added to the DOM
 		// before it can be clicked.
 		
@@ -326,8 +339,8 @@ function saveTextAsFile()
 	downloadLink.click();
 }
 
-function destroyClickedElement(event)
-{
+function destroyClickedElement(event) {
+    "use strict";
 	document.body.removeChild(event.target);
 }
 
@@ -344,5 +357,7 @@ function IsJsonString(str) {
 }
 
 </script>
+
+
 </body>
 </html>
