@@ -34,9 +34,11 @@ function doDeparam(objet) {
         propr,
         noview,
         noshape,
+        noline,
         noprop,
         reg,
-        currshapes;
+        currshapes,
+        currlines;
     
     // place all object parameters in a table
     for (propr in objet.Parameters) {
@@ -74,6 +76,40 @@ function doDeparam(objet) {
 		        } // if
 	        } // for
         } // for
+        
+        // First check if Views include Lines
+        if (typeof objet.Views[noview].Lines !== "undefined") {
+            currlines = objet.Views[noview].Lines;
+            for (noline = 0; noline <= currlines.length - 1; noline += 1) {
+                // Check if string to deparametrized is realyy a string
+                // if not it is a number so nothing to do
+                if (typeof currlines[noline].Start.x === 'string' || currlines[noline].Start.x instanceof String) {
+			        for (noprop = 0; noprop <= param.length - 1; noprop += 1) {
+				        reg = new RegExp(param[noprop], "g");
+				        currlines[noline].Start.x = currlines[noline].Start.x.replace(reg, " " + objet.Parameters[param[noprop]]);
+                    } // for
+		        } // if 
+                if (typeof currlines[noline].Start.y === 'string' || currlines[noline].Start.y instanceof String) {
+			        for (noprop = 0; noprop <= param.length - 1; noprop += 1) {
+				        reg = new RegExp(param[noprop], "g");
+				        currlines[noline].Start.y = currlines[noline].Start.y.replace(reg, " " + objet.Parameters[param[noprop]]);
+                    } // for
+		        } // if 
+                if (typeof currlines[noline].End.x === 'string' || currlines[noline].End.x instanceof String) {
+			        for (noprop = 0; noprop <= param.length - 1; noprop += 1) {
+				        reg = new RegExp(param[noprop], "g");
+				        currlines[noline].End.x = currlines[noline].End.x.replace(reg, " " + objet.Parameters[param[noprop]]);
+                    } // for
+		        } // if 
+                if (typeof currlines[noline].End.y === 'string' || currlines[noline].End.y instanceof String) {
+			        for (noprop = 0; noprop <= param.length - 1; noprop += 1) {
+				        reg = new RegExp(param[noprop], "g");
+				        currlines[noline].End.y = currlines[noline].End.y.replace(reg, " " + objet.Parameters[param[noprop]]);
+                    } // for
+		        } // if 
+            } // for no line
+        }
+        
     } // for
     
     // 2nd evaluate formula
@@ -101,6 +137,7 @@ function doDeparam(objet) {
 // --------------------------------------------------
 function getWidthString(the_text_that_you_want_to_measure, fontsize, fontname) {
 	"use strict";
+    
     var c,
         ctx,
         metric;
@@ -112,6 +149,62 @@ function getWidthString(the_text_that_you_want_to_measure, fontsize, fontname) {
 	// Measure the string 
 	metric = ctx.measureText(the_text_that_you_want_to_measure);
 	return metric.width;
+}
+
+
+
+// ------------------------------------------------
+// function: Draw Lines
+// draw a a line
+// input : objet = the Object json file
+// ------------------------------------------------
+function drawLine(svgelem, objet) {
+    "use strict";
+    
+    var noview,
+        noline,
+        currview,
+        scale,
+        myLine,
+        myLineStyle = [];
+    
+    myLineStyle = ['center line', 'dashed'];
+    
+    scale = objet.Header.Scale;
+
+    for (noview = 0; noview <= objet.Views.length - 1; noview += 1) {
+        currview = objet.Views[noview];
+        if (typeof objet.Views[noview].Lines !== "undefined") {  // Checking mandatory if not bug !!!!
+	        for (noline = 0; noline <= currview.Lines.length - 1; noline += 1) {
+
+                myLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+
+                myLine.setAttribute("x1", scale * (currview.Header.Origine.x + currview.Lines[noline].Start.x));
+                myLine.setAttribute("y1", scale * (currview.Header.Origine.y - currview.Lines[noline].Start.y));
+    
+                myLine.setAttribute("x2", scale * (currview.Header.Origine.x + currview.Lines[noline].End.x));
+                myLine.setAttribute("y2", scale * (currview.Header.Origine.y - currview.Lines[noline].End.y));
+                
+                // Define line style:
+                // center line: Done
+                // dashet line: To do
+                if (currview.Lines[noline].Stroke === myLineStyle[0]) {
+                    myLine.setAttribute("stroke", "#999");
+                    myLine.setAttribute("stroke-dasharray", "25,6,8,6");
+                } else if (currview.Lines[noline].Stroke === myLineStyle[1]) {
+                    myLine.setAttribute("stroke", "#000");
+                    myLine.setAttribute("stroke-dasharray", "8,6");                    
+                } else {
+                     myLine.setAttribute("stroke", "#000");
+                }
+                myLine.setAttribute("stroke-width", 0.75);
+                
+                svgelem.getElementById("lines").appendChild(myLine);
+            } // for
+        } //if
+    } // for
+
+    return 0;
 }
 
 
@@ -222,7 +315,7 @@ function Shape() {
 		// courbe d'origine sans les fillet pour le debug
 		ttexte = "<path d=\"M";
 		for (i = 0; i <= pts.length - 1; i += 1) {
-			ttexte += " " + (ori.x + scale * pts[i].x) + " " + (ori.y - scale * pts[i].y) + " L";
+			ttexte += " " + (scale * (ori.x + pts[i].x)) + " " + (scale * (ori.y - pts[i].y)) + " L";
 		}
 		ttexte = ttexte.substring(0, ttexte.length - 2);
 		ttexte += "z\" fill=\"white\" stroke=\"red\" stroke-width=\"1\" />";
@@ -232,16 +325,16 @@ function Shape() {
     ttexte += "<g><path d=\"M";
     for (i = 0; i <= pts.length - 1; i += 1) {
 		if (pts[i].r !== null) {
-			ttexte += (ori.x + scale * pr[2 * i].x) + "," +
-                      (ori.y - scale * pr[2 * i].y) + " C" +
-                      (ori.x + scale * pr[2 * i + 1].x) + "," +
-                      (ori.y - scale * pr[2 * i + 1].y) + " " +
-                      (ori.x + scale * su[2 * i + 1].x) + "," +
-                      (ori.y - scale * su[2 * i + 1].y) + " " +
-                      (ori.x + scale * su[2 * i].x) + "," +
-                      (ori.y - scale * su[2 * i].y) + " L";
+			ttexte += (scale * (ori.x + pr[2 * i].x)) + "," +
+                      (scale * (ori.y - pr[2 * i].y)) + " C" +
+                      (scale * (ori.x + pr[2 * i + 1].x)) + "," +
+                      (scale * (ori.y - pr[2 * i + 1].y)) + " " +
+                      (scale * (ori.x + su[2 * i + 1].x)) + "," +
+                      (scale * (ori.y - su[2 * i + 1].y)) + " " +
+                      (scale * (ori.x + su[2 * i].x)) + "," +
+                      (scale * (ori.y - su[2 * i].y)) + " L";
 		} else {
-			ttexte += (ori.x + scale * pts[i].x) + "," + (ori.y - scale * pts[i].y) + " L";
+			ttexte += (scale * (ori.x + pts[i].x)) + "," + (scale * (ori.y - pts[i].y)) + " L";
 		}
     }
       
@@ -258,8 +351,8 @@ function Shape() {
 	if (affichage === 1) {
 		// Affiche les numéros de chaque point
 		for (i = 0; i <= pts.length - 1; i += 1) {
-			ttexte += "<text x=\"" + (ori.x + scale * pts[i].x) + "\"" +
-                           " y=\"" + (ori.y - scale * pts[i].y) + "\"" +
+			ttexte += "<text x=\"" + (scale * (ori.x + pts[i].x)) + "\"" +
+                           " y=\"" + (scale * (ori.y - pts[i].y)) + "\"" +
                            " font-size=\"" + format.font_size + "\" fill=\"red\">" + i + "</text>";
 		}
 	}
@@ -268,17 +361,17 @@ function Shape() {
 	if (affichage === 2) {
         for (i = 0; i <= pts.length - 1; i += 1) {
 		    if (pts[i].r !== null) {
-			    ttexte += "<circle cx=\"" + (ori.x + scale * pr[2 * i].x) + "\"" +
-                                 " cy=\"" + (ori.y - scale * pr[2 * i].y) + "\"" +
+			    ttexte += "<circle cx=\"" + (scale * (ori.x + pr[2 * i].x)) + "\"" +
+                                 " cy=\"" + (scale * (ori.y - pr[2 * i].y)) + "\"" +
                                  " r=\"6\" stroke=\"black\" stroke-width=\"0\" fill=\"yellow\"/>";
-			    ttexte += "<circle cx=\"" + (ori.x + scale * pr[2 * i + 1].x) + "\"" +
-                                 " cy=\"" + (ori.y - scale * pr[2 * i + 1].y) + "\"" +
+			    ttexte += "<circle cx=\"" + (scale * (ori.x + pr[2 * i + 1].x)) + "\"" +
+                                 " cy=\"" + (scale * (ori.y - pr[2 * i + 1].y)) + "\"" +
                                  " r=\"6\" stroke=\"black\" stroke-width=\"0\" fill=\"green\"/>";
-			    ttexte += "<circle cx=\"" + (ori.x + scale * su[2 * i].x) + "\"" +
-                                 " cy=\"" + (ori.y - scale * su[2 * i].y) + "\"" +
+			    ttexte += "<circle cx=\"" + (scale * (ori.x + su[2 * i].x)) + "\"" +
+                                 " cy=\"" + (scale * (ori.y - su[2 * i].y)) + "\"" +
                                  " r=\"6\" stroke=\"black\" stroke-width=\"0\" fill=\"yellow\"/>";
-			    ttexte += "<circle cx=\"" + (ori.x + scale * su[2 * i + 1].x) + "\"" +
-                                 " cy=\"" + (ori.y - scale * su[2 * i + 1].y) + "\"" +
+			    ttexte += "<circle cx=\"" + (scale * (ori.x + su[2 * i + 1].x)) + "\"" +
+                                 " cy=\"" + (scale * (ori.y - su[2 * i + 1].y)) + "\"" +
                                  " r=\"6\" stroke=\"black\" stroke-width=\"0\" fill=\"green\"/>";
 		    }
 	    }
@@ -337,8 +430,8 @@ function Shape() {
 				    y0 = ma * x0 + ca;
 			    }
 			
-			    ttexte += "<circle cx=\"" + (ori.x + scale * x0) +
-                               "\" cy=\"" + (ori.y - scale * y0) +
+			    ttexte += "<circle cx=\"" + (scale * (ori.x + x0)) +
+                               "\" cy=\"" + (scale * (ori.y - y0)) +
                                "\" r=\"4\" stroke-width=\"0\" fill=\"red\"/>";
 		    }
 	    }
@@ -351,6 +444,7 @@ function Shape() {
 
 //---------------------------------------------------------------------------------------
 // Calculator parser: string --> value
+// Replace a string formula with value of formula result
 //---------------------------------------------------------------------------------------
 function mathEval(exp) {
     "use strict";
@@ -421,31 +515,31 @@ function drawDimension(theSvgElement, objet, dim) {
 	if (dim.Direction === "vertical") {
 	    // 1st calculate the max between starting point and ending point of dimension
 	    maxx = Math.max(scale * PtStart.x + sens * longueur, scale * PtEnd.x + sens * longueur);
-		
+
 	    // lignes d'attache (Start side)
 	    line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line1.setAttribute("x1", Ori.x + scale * PtStart.x + sens * eloignement);
-        line1.setAttribute("y1", Ori.y - (scale * PtStart.y));
-        line1.setAttribute("x2", Ori.x + maxx);
-        line1.setAttribute("y2", Ori.y - (scale * PtStart.y));
+        line1.setAttribute("x1", scale * (Ori.x + PtStart.x) + sens * eloignement);
+        line1.setAttribute("y1", scale * (Ori.y - PtStart.y));
+        line1.setAttribute("x2", scale * (Ori.x) + maxx);
+        line1.setAttribute("y2", scale * (Ori.y - PtStart.y));
         line1.setAttribute("stroke", objet.Format.Dimensions_color);
         theSvgElement.getElementById("dimension").appendChild(line1);
 
 	    // lignes d'attache (End side)
 	    line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line2.setAttribute("x1", Ori.x + scale * PtEnd.x + sens * eloignement);
-        line2.setAttribute("y1", Ori.y - (scale * PtEnd.y));
-        line2.setAttribute("x2", Ori.x + maxx);
-        line2.setAttribute("y2", Ori.y - (scale * PtEnd.y));
+        line2.setAttribute("x1", scale * (Ori.x + PtEnd.x) + sens * eloignement);
+        line2.setAttribute("y1", scale * (Ori.y - PtEnd.y));
+        line2.setAttribute("x2", scale * (Ori.x) + maxx);
+        line2.setAttribute("y2", scale * (Ori.y - PtEnd.y));
         line2.setAttribute("stroke", objet.Format.Dimensions_color);
         theSvgElement.getElementById("dimension").appendChild(line2);
 
 		// Global line
 	    line3 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line3.setAttribute("x1", Ori.x + (maxx - sens * eloignement));
-        line3.setAttribute("y1", Ori.y - (scale * PtStart.y));
-        line3.setAttribute("x2", Ori.x + (maxx - sens * eloignement));
-        line3.setAttribute("y2", Ori.y - (scale * PtEnd.y));
+        line3.setAttribute("x1", scale * (Ori.x) + (maxx - sens * eloignement));
+        line3.setAttribute("y1", scale * (Ori.y - PtStart.y));
+        line3.setAttribute("x2", scale * (Ori.x) + (maxx - sens * eloignement));
+        line3.setAttribute("y2", scale * (Ori.y - PtEnd.y));
         line3.setAttribute("stroke", objet.Format.Dimensions_color);
 	    line3.setAttribute('marker-start', 'url(#markerArrowStart)');
 	    line3.setAttribute('marker-end', 'url(#markerArrowEnd)');
@@ -456,10 +550,10 @@ function drawDimension(theSvgElement, objet, dim) {
 
 	    text1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
 	    // need some special formula to take into account the height of font
-	    text1.setAttribute("x", Ori.x + (maxx - sens * eloignement) +  0.5 * objet.Format.font_size * (0.35146 / 25.4) * 96);
+	    text1.setAttribute("x", scale * Ori.x + (maxx - sens * eloignement) -  0.5 * objet.Format.font_size * (0.35146 / 25.4) * 96);
 	    text1.setAttribute("text-anchor", "middle");
 	    text1.setAttribute("style", "writing-mode: tb;");
-	    text1.setAttribute("y", Ori.y - scale * (PtStart.y + PtEnd.y) / 2);
+	    text1.setAttribute("y", scale * (Ori.y - (PtStart.y + PtEnd.y) / 2));
 	    text1.setAttribute("fill", objet.Format.Dimensions_color);
 	    text1.setAttribute("font-size", objet.Format.font_size);
 	    text1.textContent = stringtoprint;
@@ -470,28 +564,28 @@ function drawDimension(theSvgElement, objet, dim) {
 
 	    // lignes d'attache (Start side)
 	    line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line1.setAttribute("x1", Ori.x + scale * PtStart.x);
-        line1.setAttribute("y1", Ori.y - (scale * PtStart.y + sens * eloignement));
-        line1.setAttribute("x2", Ori.x + scale * PtStart.x);
-        line1.setAttribute("y2", Ori.y - maxy);
+        line1.setAttribute("x1", scale * (Ori.x + PtStart.x));
+        line1.setAttribute("y1", scale * (Ori.y - PtStart.y) - sens * eloignement);
+        line1.setAttribute("x2", scale * (Ori.x + PtStart.x));
+        line1.setAttribute("y2", scale * (Ori.y) - maxy);
         line1.setAttribute("stroke", objet.Format.Dimensions_color);
         theSvgElement.getElementById("dimension").appendChild(line1);
 
 	    // lignes d'attache (End side)
 	    line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line2.setAttribute("x1", Ori.x + scale * PtEnd.x);
-        line2.setAttribute("y1", Ori.y - (scale * PtEnd.y + sens * eloignement));
-        line2.setAttribute("x2", Ori.x + scale * PtEnd.x);
-        line2.setAttribute("y2", Ori.y - maxy);
+        line2.setAttribute("x1", scale * (Ori.x + PtEnd.x));
+        line2.setAttribute("y1", scale * (Ori.y - PtEnd.y) - sens * eloignement);
+        line2.setAttribute("x2", scale * (Ori.x + PtEnd.x));
+        line2.setAttribute("y2", scale * (Ori.y) - maxy);
         line2.setAttribute("stroke", objet.Format.Dimensions_color);
         theSvgElement.getElementById("dimension").appendChild(line2);
 		
 		// Global line
 	    line3 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line3.setAttribute("x1", Ori.x + scale * PtStart.x);
-        line3.setAttribute("y1", Ori.y - (maxy - sens * eloignement));
-        line3.setAttribute("x2", Ori.x + scale * PtEnd.x);
-        line3.setAttribute("y2", Ori.y - (maxy - sens * eloignement));
+        line3.setAttribute("x1", scale * (Ori.x + PtStart.x));
+        line3.setAttribute("y1", scale * (Ori.y) - (maxy - sens * eloignement));
+        line3.setAttribute("x2", scale * (Ori.x + PtEnd.x));
+        line3.setAttribute("y2", scale * (Ori.y) - (maxy - sens * eloignement));
         line3.setAttribute("stroke", objet.Format.Dimensions_color);
 	    line3.setAttribute('marker-start', 'url(#markerArrowStart)');
 	    line3.setAttribute('marker-end', 'url(#markerArrowEnd)');
@@ -501,10 +595,12 @@ function drawDimension(theSvgElement, objet, dim) {
 		stringtoprint = (PtEnd.x - PtStart.x + " " + objet.Header.Unit);
 
 	    text1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-	    text1.setAttribute("x", Ori.x + scale * (PtStart.x + PtEnd.x) / 2);
+	    text1.setAttribute("x", scale * (Ori.x + (PtStart.x + PtEnd.x) / 2));
 	    text1.setAttribute("text-anchor", "middle");
-	    text1.setAttribute("y", Ori.y - (maxy - 0.5 * (1 - sens) * objet.Format.font_size * (0.35146 / 25.4) * 96));
+        // we have to find a formula to determine the paramter 4 in function of font and font size
+        text1.setAttribute("y", scale * (Ori.y) - (maxy - sens * eloignement - 4));
 	    text1.setAttribute("fill", objet.Format.Dimensions_color);
+        text1.setAttribute("background-color", "#ffff00");
 	    text1.setAttribute("font-size", objet.Format.font_size);
 	    text1.textContent = stringtoprint;
 	    theSvgElement.getElementById("dimension").appendChild(text1);

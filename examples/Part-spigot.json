@@ -18,8 +18,8 @@
     {
       "Header": {
         "Origine": {
-          "x": 140,
-          "y": 100
+          "x": 20,
+          "y": 10
         },
         "Name": "Right",
         "Hatch": {
@@ -28,6 +28,41 @@
           "Distance": 6
         }
       },
+      "Lines": [
+        {
+          "Stroke": "center line",
+          "Start": {
+            "x": -2,
+            "y": 0
+          },
+          "End": {
+            "x": 40,
+            "y": 0
+          }
+        },
+        {
+          "Stroke": "dashed",
+          "Start": {
+            "x": 19.31,
+            "y": 0
+          },
+          "End": {
+            "x": 19.31,
+            "y": -3.2
+          }
+        },
+        {
+          "Stroke": "fill",
+          "Start": {
+            "x": 20.91,
+            "y": 0
+          },
+          "End": {
+            "x": 20.91,
+            "y": -3.2
+          }
+        }
+      ],
       "Shapes": [
         {
           "Fill": "hatch",
@@ -156,8 +191,8 @@
     {
       "Header": {
         "Origine": {
-          "x": 60,
-          "y": 100
+          "x": 6,
+          "y": 10
         },
         "Name": "Front",
         "Hatch": {

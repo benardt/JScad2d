@@ -70,6 +70,7 @@ var editor = new JSONEditor(container);
 // Global variable
 
 var theObj;
+var myDoc;
 
 // ------------------------------------------
     
@@ -77,9 +78,17 @@ var theObj;
 //-------------------------------------------------------------------
 function doInitialization() {
     "use strict";
-    doUpdate();
+    
+    // Open new window for drawing
+    var myWindow = window.open('', 'Drawing', "width=600, height=400", '');
+    myWindow.document.open();
+    myWindow.document.writeln('<h2>Drawing</h2>');
+    myWindow.document.writeln('<div id=\"drawing1\"></div>');
+    myDoc = myWindow.document;
+    myWindow.document.close();
+    
     document.body.addEventListener("keyup", doUpdate, false);
-
+    doUpdate();
 }
     
 //-------------------------------------------------------------------
@@ -112,10 +121,12 @@ function doUpdate() {
 
     var noview,
         noshape,
+        noline,
         nopt,
         strTmp,
         svg,
         nodim,
+        currview,
         limit = {};
     
     
@@ -125,12 +136,13 @@ function doUpdate() {
     // Here place function to find min x & min y & max x & max y to automatize the viewBox behavior
     limit = {min: {x: 1000000, y: 1000000}, max: {x: -100000, y: -1000000}};
     for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
-	    for (noshape = 0; noshape <= theObj.Views[noview].Shapes.length - 1; noshape += 1) {
-            for (nopt = 0; nopt <= theObj.Views[noview].Shapes[noshape].Points.length - 1; nopt += 1) {
-                limit.min.x = Math.min(limit.min.x, theObj.Views[noview].Shapes[noshape].Points[nopt].x);
-                limit.min.y = Math.min(limit.min.y, theObj.Views[noview].Shapes[noshape].Points[nopt].y);
-                limit.max.x = Math.max(limit.max.x, theObj.Views[noview].Shapes[noshape].Points[nopt].x);
-                limit.max.y = Math.max(limit.max.y, theObj.Views[noview].Shapes[noshape].Points[nopt].y);
+        currview = theObj.Views[noview];
+	    for (noshape = 0; noshape <= currview.Shapes.length - 1; noshape += 1) {
+            for (nopt = 0; nopt <= currview.Shapes[noshape].Points.length - 1; nopt += 1) {
+                limit.min.x = Math.min(limit.min.x, currview.Header.Origine.x + currview.Shapes[noshape].Points[nopt].x);
+                limit.min.y = Math.min(limit.min.y, currview.Header.Origine.y - currview.Shapes[noshape].Points[nopt].y);
+                limit.max.x = Math.max(limit.max.x, currview.Header.Origine.x + currview.Shapes[noshape].Points[nopt].x);
+                limit.max.y = Math.max(limit.max.y, currview.Header.Origine.y - currview.Shapes[noshape].Points[nopt].y);
             } // for
         } // for
     } // for
@@ -167,7 +179,7 @@ function doUpdate() {
     // patern pour hachure
     for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
         if (theObj.Views[noview].Header.Hatch.Distance !== null) {
-		    svg += "<defs>";
+		    svg += "\n<defs>";
             var espacement = theObj.Views[noview].Header.Hatch.Distance;
             svg += "<pattern id=\"diagonalHatch" + "View" + noview + "\" " +
                     "patternUnits=\"userSpaceOnUse\" " +
@@ -178,21 +190,20 @@ function doUpdate() {
                     "stroke=\"" + theObj.Views[noview].Header.Hatch.Color + "\" " +
                     "stroke-width=\"" + theObj.Format.Hatch_thick + "\"/>";
             svg += "</pattern>";
-            svg += "</defs>";
+            svg += "\n</defs>";
 	    }
     }
 
 
-    
-
     // draw shape (with rounded corner if specified)
     for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
-	    for (noshape = 0; noshape <= theObj.Views[noview].Shapes.length - 1; noshape += 1) {
-		    svg += Shape(theObj.Views[noview].Header.Name,
-                 theObj.Views[noview].Shapes[noshape].Points,
+        currview = theObj.Views[noview];
+	    for (noshape = 0; noshape <= currview.Shapes.length - 1; noshape += 1) {
+		    svg += Shape(currview.Header.Name,
+                 currview.Shapes[noshape].Points,
                  theObj.Header.Scale,
-                 theObj.Views[noview].Header.Origine,
-                 theObj.Views[noview].Shapes[noshape].Fill,
+                 currview.Header.Origine,
+                 currview.Shapes[noshape].Fill,
                  noview,
                  constructor,
                  theObj.Format);
@@ -203,22 +214,35 @@ function doUpdate() {
 
     svg += "\n<g id=\"dimension\"></g>";
     svg += "\n<g id=\"origin\"></g>";
-    svg += "</svg>";
-    document.getElementById("drawing").innerHTML = svg;
-    theSvgElement = document.getElementsByTagName("svg")[0];
+    svg += "\n<g id=\"lines\"></g>";
+    svg += "\n</svg>";
+    
+    myDoc.getElementById("drawing1").innerHTML = svg;
+    theSvgElement = myDoc.getElementsByTagName("svg")[0];
+    
+    // This is to draw Drawing in the current window with jsoneditor
+    //document.getElementById("drawing").innerHTML = svg;
+    //theSvgElement = document.getElementsByTagName("svg")[0];
+    
+    // draw Lines
+    drawLine(theSvgElement, theObj);
 
-
+    
     // draw dimension
 
     for (nodim = 0; nodim <= theObj.Dimensions.length - 1; nodim += 1) {
 	    svg += drawDimension(theSvgElement, theObj, theObj.Dimensions[nodim]);
     } // for
 
+    // draw oorigin point for each view
     drawOrigin(theObj);
+    
 
     //window.setTimeout(doUpdate, 250);       // loop for live print not use with event handler
+    return svg;
 }
 
+       
  
 // ------------------------------------------------
 // function: Draw origin
@@ -234,14 +258,15 @@ function drawOrigin(objet) {
         txtsvg = "",
 
         currview = objet.Views;
+    
 
 	if (x[0].checked === true) {
 		// draw origin for each View
 		for (noview = 0; noview <= currview.length - 1; noview += 1) {
 
 			var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-			circle.setAttribute("cx", currview[noview].Header.Origine.x);
-			circle.setAttribute("cy", currview[noview].Header.Origine.y);
+			circle.setAttribute("cx", objet.Header.Scale * currview[noview].Header.Origine.x);
+			circle.setAttribute("cy", objet.Header.Scale * currview[noview].Header.Origine.y);
 			circle.setAttribute("r", 4);
 			circle.setAttribute("fill", "blue");
 			circle.setAttribute("stroke-width", 0);
@@ -278,7 +303,7 @@ function saveTextAsSVG() {
     "use strict";
 	//var textToWrite = document.getElementById("inputTextToSave").value;
 	var json = editor.get();
-	var textToWrite = document.getElementById("drawing").innerHTML;
+	var textToWrite = myDoc.getElementById("drawing1").innerHTML;
 	
 	var textFileAsBlob = new Blob([textToWrite], {type: 'text/plain'});
 	var fileNameToSaveAs = json.Header.Name + "_svg.svg";
@@ -288,7 +313,7 @@ function saveTextAsSVG() {
 	var downloadLink = document.createElement("a");
 	downloadLink.download = fileNameToSaveAs;
 	downloadLink.innerHTML = "Download File";
-	if (window.webkitURL !== null) {
+	if (typeof window.webkitURL !== "undefined") {
 		// Chrome allows the link to be clicked
 		// without actually adding it to the DOM.
 		downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
@@ -308,7 +333,7 @@ function saveTextAsSVG() {
   
 // save file
 function saveTextAsFile() {
-    "use strcit";
+    "use strict";
     
 	//var textToWrite = document.getElementById("inputTextToSave").value;
 	var json = editor.get();
@@ -317,23 +342,23 @@ function saveTextAsFile() {
 	var textFileAsBlob = new Blob([textToWrite], {type: 'text/plain'});
     var fileNameToSaveAs = json.Header.Name + ".json";
 	
-	
 	var downloadLink = document.createElement("a");
+
 	downloadLink.download = fileNameToSaveAs;
 	downloadLink.innerHTML = "Download File";
-	if (window.webkitURL !== null) {
+
+	if (typeof window.webkitURL !== "undefined") {
 		// Chrome allows the link to be clicked
 		// without actually adding it to the DOM.
 		downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
 	} else {
 		// Firefox requires the link to be added to the DOM
 		// before it can be clicked.
-		
+
 		downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
 		downloadLink.onclick = destroyClickedElement;
 		downloadLink.style.display = "none";
 		document.body.appendChild(downloadLink);
-		
 	}
 
 	downloadLink.click();
