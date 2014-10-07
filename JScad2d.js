@@ -193,7 +193,7 @@ function drawLine(svgelem, objet) {
                     myLine.setAttribute("stroke-dasharray", "25,6,8,6");
                 } else if (currview.Lines[noline].Stroke === myLineStyle[1]) {
                     myLine.setAttribute("stroke", "#000");
-                    myLine.setAttribute("stroke-dasharray", "8,6");                    
+                    myLine.setAttribute("stroke-dasharray", "8,6");
                 } else {
                      myLine.setAttribute("stroke", "#000");
                 }
@@ -494,7 +494,9 @@ function drawDimension(theSvgElement, objet, dim) {
         line1,
         line2,
         line3,
-        text1;
+        line4,
+        text1,
+        textheight = 8;
 
     switch (dim.Sens) {
     case "top":
@@ -513,6 +515,10 @@ function drawDimension(theSvgElement, objet, dim) {
 	
 
 	if (dim.Direction === "vertical") {
+        
+        // text
+		stringtoprint = Math.abs((PtEnd.y - PtStart.y));    
+    
 	    // 1st calculate the max between starting point and ending point of dimension
 	    maxx = Math.max(scale * PtStart.x + sens * longueur, scale * PtEnd.x + sens * longueur);
 
@@ -534,20 +540,29 @@ function drawDimension(theSvgElement, objet, dim) {
         line2.setAttribute("stroke", objet.Format.Dimensions_color);
         theSvgElement.getElementById("dimension").appendChild(line2);
 
-		// Global line
+		// Global line start
 	    line3 = document.createElementNS("http://www.w3.org/2000/svg", "line");
         line3.setAttribute("x1", scale * (Ori.x) + (maxx - sens * eloignement));
         line3.setAttribute("y1", scale * (Ori.y - PtStart.y));
         line3.setAttribute("x2", scale * (Ori.x) + (maxx - sens * eloignement));
-        line3.setAttribute("y2", scale * (Ori.y - PtEnd.y));
+        line3.setAttribute("y2", scale * (Ori.y - PtStart.y - 0.5 * (PtEnd.y - PtStart.y)) - 1 * textheight);
         line3.setAttribute("stroke", objet.Format.Dimensions_color);
 	    line3.setAttribute('marker-start', 'url(#markerArrowStart)');
-	    line3.setAttribute('marker-end', 'url(#markerArrowEnd)');
+	    //line3.setAttribute('marker-end', 'url(#markerArrowEnd)');
         theSvgElement.getElementById("dimension").appendChild(line3);
+        
+		// Global line end
+	    line4 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line4.setAttribute("x1", scale * (Ori.x) + (maxx - sens * eloignement));
+        line4.setAttribute("y1", scale * (Ori.y - PtStart.y - 0.5 * (PtEnd.y - PtStart.y)) + 1 * textheight);
+        line4.setAttribute("x2", scale * (Ori.x) + (maxx - sens * eloignement));
+        line4.setAttribute("y2", scale * (Ori.y - PtEnd.y));
+        line4.setAttribute("stroke", objet.Format.Dimensions_color);
+	    //line4.setAttribute('marker-start', 'url(#markerArrowStart)');
+	    line4.setAttribute('marker-end', 'url(#markerArrowEnd)');
+        theSvgElement.getElementById("dimension").appendChild(line4);
 
 		// text
-		stringtoprint = (Math.abs((PtEnd.y - PtStart.y)) + " " + objet.Header.Unit);
-
 	    text1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
 	    // need some special formula to take into account the height of font
 	    text1.setAttribute("x", scale * Ori.x + (maxx - sens * eloignement) -  0.5 * objet.Format.font_size * (0.35146 / 25.4) * 96);
@@ -560,6 +575,10 @@ function drawDimension(theSvgElement, objet, dim) {
 	    theSvgElement.getElementById("dimension").appendChild(text1);
 		
 	} else if (dim.Direction === "horizontal") {
+        
+        // text
+		stringtoprint = Math.abs(PtEnd.x - PtStart.x);
+        
 		maxy = Math.max(scale * PtStart.y + sens * longueur, scale * PtEnd.y + sens * longueur);
 
 	    // lignes d'attache (Start side)
@@ -580,25 +599,34 @@ function drawDimension(theSvgElement, objet, dim) {
         line2.setAttribute("stroke", objet.Format.Dimensions_color);
         theSvgElement.getElementById("dimension").appendChild(line2);
 		
-		// Global line
+		// Global line start
 	    line3 = document.createElementNS("http://www.w3.org/2000/svg", "line");
         line3.setAttribute("x1", scale * (Ori.x + PtStart.x));
         line3.setAttribute("y1", scale * (Ori.y) - (maxy - sens * eloignement));
-        line3.setAttribute("x2", scale * (Ori.x + PtEnd.x));
+        line3.setAttribute("x2", scale * (Ori.x + 0.5 * (PtEnd.x - PtStart.x)) - 0.5 * getWidthString(stringtoprint, objet.Format.font_size, "Helvetica"));
         line3.setAttribute("y2", scale * (Ori.y) - (maxy - sens * eloignement));
         line3.setAttribute("stroke", objet.Format.Dimensions_color);
 	    line3.setAttribute('marker-start', 'url(#markerArrowStart)');
-	    line3.setAttribute('marker-end', 'url(#markerArrowEnd)');
+	    //line3.setAttribute('marker-end', 'url(#markerArrowEnd)');
         theSvgElement.getElementById("dimension").appendChild(line3);
-		
-		// text
-		stringtoprint = (PtEnd.x - PtStart.x + " " + objet.Header.Unit);
+        
+		// Global line end
+	    line4 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line4.setAttribute("x1", scale * (Ori.x + 0.5 * (PtEnd.x - PtStart.x)) + 0.5 * getWidthString(stringtoprint, objet.Format.font_size, "Helvetica"));
+        line4.setAttribute("y1", scale * (Ori.y) - (maxy - sens * eloignement));
+        line4.setAttribute("x2", scale * (Ori.x + PtEnd.x));
+        line4.setAttribute("y2", scale * (Ori.y) - (maxy - sens * eloignement));
+        line4.setAttribute("stroke", objet.Format.Dimensions_color);
+	    //line4.setAttribute('marker-start', 'url(#markerArrowStart)');
+	    line4.setAttribute('marker-end', 'url(#markerArrowEnd)');
+        theSvgElement.getElementById("dimension").appendChild(line4);
 
+        // text
 	    text1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
 	    text1.setAttribute("x", scale * (Ori.x + (PtStart.x + PtEnd.x) / 2));
 	    text1.setAttribute("text-anchor", "middle");
         // we have to find a formula to determine the paramter 4 in function of font and font size
-        text1.setAttribute("y", scale * (Ori.y) - (maxy - sens * eloignement - 4));
+        text1.setAttribute("y", scale * (Ori.y) - (maxy - sens * eloignement - 0.5 * textheight));
 	    text1.setAttribute("fill", objet.Format.Dimensions_color);
         text1.setAttribute("background-color", "#ffff00");
 	    text1.setAttribute("font-size", objet.Format.font_size);

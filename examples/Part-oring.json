@@ -24,30 +24,6 @@
           "Distance": 6
         }
       },
-      "Lines": [
-        {
-          "Stroke": "center line",
-          "Start": {
-            "x": -10,
-            "y": 0
-          },
-          "End": {
-            "x": 10,
-            "y": 0
-          }
-        },
-        {
-          "Stroke": "center line",
-          "Start": {
-            "x": 0,
-            "y": 10
-          },
-          "End": {
-            "x": 0,
-            "y": -10
-          }
-        }
-      ],
       "Shapes": [
         {
           "Fill": null,
@@ -127,9 +103,22 @@
         "Hatch": {
           "Color": "blue",
           "Angle": 45,
-          "Distance": 6
+          "Distance": 5
         }
       },
+      "Lines": [
+        {
+          "Stroke": "center line",
+          "Start": {
+            "x": -5,
+            "y": 0
+          },
+          "End": {
+            "x": 5,
+            "y": 0
+          }
+        }
+      ],
       "Shapes": [
         {
           "Fill": "hatch",
@@ -203,7 +192,7 @@
   "Format": {
     "shape_thick": 3,
     "font_size": 12,
-    "Hatch_thick": 1,
+    "Hatch_thick": 0.75,
     "Dimensions_color": "gold"
   },
   "Dimensions": [
@@ -211,12 +200,12 @@
       "PtStart": {
         "View": 0,
         "Shape": 1,
-        "Point": 1
+        "Point": 2
       },
       "PtEnd": {
         "View": 0,
         "Shape": 1,
-        "Point": 2
+        "Point": 1
       },
       "Direction": "horizontal",
       "Sens": "bottom",
@@ -224,29 +213,14 @@
     },
     {
       "PtStart": {
-        "View": 0,
-        "Shape": 0,
-        "Point": 1
-      },
-      "PtEnd": {
-        "View": 0,
-        "Shape": 0,
-        "Point": 2
-      },
-      "Direction": "horizontal",
-      "Sens": "top",
-      "FreeSpace": 60
-    },
-    {
-      "PtStart": {
-        "View": 1,
-        "Shape": 0,
-        "Point": 0
-      },
-      "PtEnd": {
         "View": 1,
         "Shape": 0,
         "Point": 3
+      },
+      "PtEnd": {
+        "View": 1,
+        "Shape": 0,
+        "Point": 2
       },
       "Direction": "vertical",
       "Sens": "left",

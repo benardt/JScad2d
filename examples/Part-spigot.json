@@ -30,6 +30,28 @@
       },
       "Lines": [
         {
+          "Stroke": "exter",
+          "Start": {
+            "x": 0,
+            "y": 0
+          },
+          "End": {
+            "x": 0,
+            "y": 1.9
+          }
+        },
+        {
+          "Stroke": "exter",
+          "Start": {
+            "x": 30.41,
+            "y": 0
+          },
+          "End": {
+            "x": 30.41,
+            "y": 1.9
+          }
+        },
+        {
           "Stroke": "center line",
           "Start": {
             "x": -2,
@@ -320,7 +342,7 @@
       "PtEnd": {
         "View": 0,
         "Shape": 1,
-        "Point": 2
+        "Point": 6
       },
       "Direction": "horizontal",
       "Sens": "bottom",
