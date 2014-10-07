@@ -337,7 +337,7 @@
       "PtStart": {
         "View": 0,
         "Shape": 1,
-        "Point": 1
+        "Point": 4
       },
       "PtEnd": {
         "View": 0,
@@ -346,18 +346,19 @@
       },
       "Direction": "horizontal",
       "Sens": "bottom",
-      "FreeSpace": 60
+      "FreeSpace": 60,
+      "Prefix": "diameter"
     },
     {
       "PtStart": {
         "View": 0,
         "Shape": 0,
-        "Point": 1
+        "Point": 4
       },
       "PtEnd": {
         "View": 0,
         "Shape": 0,
-        "Point": 2
+        "Point": 6
       },
       "Direction": "horizontal",
       "Sens": "top",

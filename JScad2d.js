@@ -489,6 +489,7 @@ function drawDimension(theSvgElement, objet, dim) {
         maxy,
         maxx,                 // needed to dimension location
         stringtoprint,              // text to print
+        prefix,                     // value to print before dimension value (R or diameter symbol)
         sens,                       // side to draw dimension up or down / left or right
     
         line1,
@@ -512,12 +513,23 @@ function drawDimension(theSvgElement, objet, dim) {
         sens = 1;
         break;
     } // switch
+    
+    prefix = "";
+    if (typeof dim.Prefix !== "undefined") {
+        if (dim.Prefix === "diameter") {
+            prefix = "\u2300" + " ";
+        }
+        else {
+            prefix = "";
+            alert(prefix.length)
+        }
+    }
 	
 
 	if (dim.Direction === "vertical") {
         
         // text
-		stringtoprint = Math.abs((PtEnd.y - PtStart.y));    
+		stringtoprint = prefix + Math.abs((PtEnd.y - PtStart.y));    
     
 	    // 1st calculate the max between starting point and ending point of dimension
 	    maxx = Math.max(scale * PtStart.x + sens * longueur, scale * PtEnd.x + sens * longueur);
@@ -577,7 +589,7 @@ function drawDimension(theSvgElement, objet, dim) {
 	} else if (dim.Direction === "horizontal") {
         
         // text
-		stringtoprint = Math.abs(PtEnd.x - PtStart.x);
+		stringtoprint = prefix + Math.abs(PtEnd.x - PtStart.x);
         
 		maxy = Math.max(scale * PtStart.y + sens * longueur, scale * PtEnd.y + sens * longueur);
 
@@ -603,7 +615,7 @@ function drawDimension(theSvgElement, objet, dim) {
 	    line3 = document.createElementNS("http://www.w3.org/2000/svg", "line");
         line3.setAttribute("x1", scale * (Ori.x + PtStart.x));
         line3.setAttribute("y1", scale * (Ori.y) - (maxy - sens * eloignement));
-        line3.setAttribute("x2", scale * (Ori.x + 0.5 * (PtEnd.x - PtStart.x)) - 0.5 * getWidthString(stringtoprint, objet.Format.font_size, "Helvetica"));
+        line3.setAttribute("x2", scale * (Ori.x + PtStart.x + 0.5 * (PtEnd.x - PtStart.x)) - 0.5 * getWidthString(stringtoprint, objet.Format.font_size, "Helvetica"));
         line3.setAttribute("y2", scale * (Ori.y) - (maxy - sens * eloignement));
         line3.setAttribute("stroke", objet.Format.Dimensions_color);
 	    line3.setAttribute('marker-start', 'url(#markerArrowStart)');
@@ -612,7 +624,7 @@ function drawDimension(theSvgElement, objet, dim) {
         
 		// Global line end
 	    line4 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line4.setAttribute("x1", scale * (Ori.x + 0.5 * (PtEnd.x - PtStart.x)) + 0.5 * getWidthString(stringtoprint, objet.Format.font_size, "Helvetica"));
+        line4.setAttribute("x1", scale * (Ori.x + PtStart.x + 0.5 * (PtEnd.x - PtStart.x)) + 0.5 * getWidthString(stringtoprint, objet.Format.font_size, "Helvetica"));
         line4.setAttribute("y1", scale * (Ori.y) - (maxy - sens * eloignement));
         line4.setAttribute("x2", scale * (Ori.x + PtEnd.x));
         line4.setAttribute("y2", scale * (Ori.y) - (maxy - sens * eloignement));
