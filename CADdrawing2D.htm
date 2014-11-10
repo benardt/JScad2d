@@ -49,13 +49,11 @@
         <td colspan="3"><div id="jsoneditor" style="width: 450px; height: 400px;" ></div></td>
     </tr>
     <tr>
-        <td class="menu" colspan="3" ><h3>Debug section:</h3><br><div id="debug"></div></td>
-    </tr>
-    <tr>
         <td  class="menu" colspan="3" >
         squeleton: <input class="messageCheckbox" type="checkbox" value="1" name="mailId[]">&nbsp;
         fillet: <input class="messageCheckbox" type="checkbox" value="2" name="mailId[]">&nbsp;
-       <form id="myForm"> origin: <input class="messageCheckbox" type="checkbox" onclick="drawOrigin(theObj)" value="3" name="mailId[]"></form>&nbsp;
+       <form id="myForm1"> origin: <input class="messageCheckbox" type="checkbox" onclick="drawOrigin(theObj)" value="3" name="mailId[]"></form>&nbsp;
+        <button type="button" onclick="doDebug(theObj);">Debug</button>
      </td></tr>
 </table>
     
@@ -76,6 +74,10 @@ var myDoc;
     
 
 //-------------------------------------------------------------------
+// function:    doInitialization
+//              launch doInitialization at the end of
+//              load JSON function
+    
 function doInitialization() {
     "use strict";
     
@@ -87,7 +89,10 @@ function doInitialization() {
     myDoc = myWindow.document;
     myWindow.document.close();
     
+    // Add event to body: each time a key is hit -> launch function 'doUpdate'
     document.body.addEventListener("keyup", doUpdate, false);
+    
+    // Start function 'doUpdate' for the first time
     doUpdate();
 }
     
@@ -96,23 +101,26 @@ function doInitialization() {
 //-------------------------------------------------------------------
 function doUpdate() {
     "use strict";
+    
+    // Put all data from JSON editor to theObj
     theObj = editor.get();
 
-        
-    //var constructor = document.querySelector('.messageCheckbox:checked').value;
+    // Check box
     var i,
-        constructor = null,
+        constructor = null,  // number of checked box
         inputElements = document.getElementsByClassName('messageCheckbox');
     for (i = 0; inputElements[i]; i += 1) {
         if (inputElements[i].checked) {
             constructor = 1 * inputElements[i].value;
             break;
-        }
-    }
+        } // if
+    } // for
 
-    //document.getElementById("debug").innerHTML = JSON.stringify(json, null, 2);
-    document.getElementById("debug").innerHTML = "Total elements: " + theObj.Views.length + "<br>" +
-            "checked box: " + constructor  + "<br>";
+    
+    // Check if PART or ASSY object
+    if (theObj.Header.Type === "part") {
+        
+    }
         
 
 // -----------------------------------------------
@@ -147,11 +155,9 @@ function doUpdate() {
         } // for
     } // for
     
-    // alert((theObj.Header.Scale * limit.min.x) + " - " + (theObj.Header.Scale * limit.min.y) + " : " + (theObj.Header.Scale * limit.max.x) + " - " + (theObj.Header.Scale * limit.max.y));
-    
-    
-    // cas du zoom
+
     if (typeof theSvgElement === "undefined") {
+        // Zoom
         strTmp =  (theObj.Header.Scale * limit.min.x) + " " +
                                             (theObj.Header.Scale * limit.min.y) + " " +
                                             (theObj.Header.Scale * (limit.max.x - limit.min.x)) + " " +
@@ -160,13 +166,13 @@ function doUpdate() {
     } else {
         var viewBox = theSvgElement.getAttribute('viewBox');	// Grab the object representing the SVG element's viewBox attribute.
         svg = "<svg height=\"400\" width=\"600\" viewBox=\"" + viewBox + "\"  xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
-    }
+    } // if
 
    
-    svg += "<title>Example triangle01- simple example of a 'path'</title>";
+    svg += "<title>" + 1 + "</title>";
     svg += "<desc>A path that draws a triangle</desc>";
       
-      
+    // Define arrow for dimension
 	svg += "<defs>";
 	svg += "<marker id=\"markerArrowStart\" markerWidth=\"13\" markerHeight=\"13\" refx=\"2\" refy=\"5\"  orient=\"auto\">";
     svg += "<path d=\"M2,5 L10,9 L10,2 L2,5\" style=\"fill:" + theObj.Format.Dimensions_color + ";\" />";
@@ -175,8 +181,9 @@ function doUpdate() {
     svg += "<path d=\"M2,2 L2,9 L10,5 L2,2\" style=\"fill:" + theObj.Format.Dimensions_color + ";\" />";
 	svg += "</marker>";
 	svg += "</defs>";
-      
-    // patern pour hachure
+    
+    
+    // Patern for hatch
     for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
         if (theObj.Views[noview].Header.Hatch.Distance !== null) {
 		    svg += "\n<defs>";
@@ -191,8 +198,8 @@ function doUpdate() {
                     "stroke-width=\"" + theObj.Format.Hatch_thick + "\"/>";
             svg += "</pattern>";
             svg += "\n</defs>";
-	    }
-    }
+	    } // if
+    } // for
 
 
     // draw shape (with rounded corner if specified)
@@ -211,7 +218,7 @@ function doUpdate() {
     } // for
 
 
-
+    // Add containers: dimension, origin and lines
     svg += "\n<g id=\"dimension\"></g>";
     svg += "\n<g id=\"origin\"></g>";
     svg += "\n<g id=\"lines\"></g>";
@@ -229,16 +236,14 @@ function doUpdate() {
 
     
     // draw dimension
-
     for (nodim = 0; nodim <= theObj.Dimensions.length - 1; nodim += 1) {
 	    svg += drawDimension(theSvgElement, theObj, theObj.Dimensions[nodim]);
     } // for
 
-    // draw oorigin point for each view
+    // draw origin point for each view
     drawOrigin(theObj);
     
 
-    //window.setTimeout(doUpdate, 250);       // loop for live print not use with event handler
     return svg;
 }
 
@@ -253,7 +258,7 @@ function doUpdate() {
 function drawOrigin(objet) {
     "use strict";
     
-	var x = document.forms.myForm,
+	var x = document.forms.myForm1,
         noview,
         txtsvg = "",
 
@@ -263,7 +268,6 @@ function drawOrigin(objet) {
 	if (x[0].checked === true) {
 		// draw origin for each View
 		for (noview = 0; noview <= currview.length - 1; noview += 1) {
-
 			var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 			circle.setAttribute("cx", objet.Header.Scale * currview[noview].Header.Origine.x);
 			circle.setAttribute("cy", objet.Header.Scale * currview[noview].Header.Origine.y);
@@ -271,17 +275,16 @@ function drawOrigin(objet) {
 			circle.setAttribute("fill", "blue");
 			circle.setAttribute("stroke-width", 0);
 			theSvgElement.getElementById("origin").appendChild(circle);
-		}
-	
+		} // for
 	} else if (x[0].checked === false) {
         var element = theSvgElement.getElementById("origin");
         while (element.firstChild) {
             element.removeChild(element.firstChild);
-        }
-	}
+        } // while
+	} // if
 					   
 	return 0;
-}
+} // drawOrigin
 
 
 
@@ -307,7 +310,6 @@ function saveTextAsSVG() {
 	
 	var textFileAsBlob = new Blob([textToWrite], {type: 'text/plain'});
 	var fileNameToSaveAs = json.Header.Name + "_svg.svg";
-	
 	
 
 	var downloadLink = document.createElement("a");
@@ -367,7 +369,7 @@ function saveTextAsFile() {
 function destroyClickedElement(event) {
     "use strict";
 	document.body.removeChild(event.target);
-}
+} // destroyClickedElement
 
 //-------------------------------------------------------------
 // Test if str is JSON format

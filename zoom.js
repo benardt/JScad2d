@@ -1,3 +1,53 @@
+
+
+function doDebug(myObj) {
+    "use strict";
+    
+    var i,
+        strTmp,
+        nbpoint,
+        myWindow,
+        myDocDebug;
+    
+    // Open new window for debug
+    myWindow = window.open('', 'Debug', "width=700, height=400", '');
+    myDocDebug = myWindow.document;
+    
+    myDocDebug.open();
+    
+    myDocDebug.writeln('<h2>Debug</h2>');
+    myDocDebug.body.style.backgroundColor="black";
+    myDocDebug.body.style.color="white";
+    myDocDebug.body.style.fontFamily = "Courier";
+    myDocDebug.writeln('<div id=\"debug\"></div>');
+
+    myDocDebug.close();
+    
+    if (typeof myObj === "undefined") {
+        myDocDebug.getElementById("debug").innerHTML = "Drawing not loaded";
+    } else {
+        
+        myDocDebug.getElementById("debug").innerHTML += doDebugLine("The type is:", myObj.Header.Type, "OK");
+        myDocDebug.getElementById("debug").innerHTML += doDebugLine("The name is:", myObj.Header.Name, "OK");
+        myDocDebug.getElementById("debug").innerHTML += doDebugLine("The title is:", myObj.Header.Title, "OK");
+
+    }
+    
+    return 0;
+} // doDebug
+
+function doDebugLine(varA, varB, varC) {
+    var i, strTmp, nbpoint;
+    strTmp = varA + " " + varB + " ";
+    nbpoint = 60 - strTmp.length;
+    for (i = 0; i <= nbpoint - 1; i += 1) {
+        strTmp += ".";
+    }
+    strTmp += varC + "<br>";
+    return strTmp;
+}
+
+
 /*  Constants: */
 var leftArrow   = 37;	// The numeric code for the left arrow key.
 var upArrow     = 38;

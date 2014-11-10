@@ -377,7 +377,8 @@
       },
       "Direction": "vertical",
       "Sens": "left",
-      "FreeSpace": 40
+      "FreeSpace": 40,
+      "Prefix": "diameter"
     }
   ]
 }

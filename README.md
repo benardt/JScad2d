@@ -1,7 +1,7 @@
 # JScad2d
 
 
-Javascript Library for CAD 2D drawing from json file
+Javascript Library for CAD 2D drawing from json file. A JSON file includes all data needed to draw paramateric 2D shape as vector image. Export in JSON file or in SVG file.
 
 <img alt="Global view" src="https://github.com/benardt/JScad2d/blob/master/misc/VueGlobale.png">
 
@@ -14,9 +14,10 @@ Draw parts and assemble them in an assembly drawing. Parts and Assy drawing are 
 ## Features
 
 * Full parametric modeling
-* Draw any shape
+* Draw any shape (print squeleton for debug)
 * Make fillet
 * Fill shape with hatch
+* Draw dimensions
 * Apply transformation
   * Rotate
 
@@ -26,15 +27,34 @@ Draw parts and assemble them in an assembly drawing. Parts and Assy drawing are 
 
 * Header {}
   * Type: part
+  * Name
+  * Title
   * Unit
-* Parameters[]
+* Parameters{}
 * Views[]
-  * Origine{} 
-  * Shapes[]
+  * [] {}
     * Header {}
-    * Points[]
-  * Lines[]
-  * Points[]
+      * Name
+      * Origine {}
+        * x
+	* y
+      * Hatch {}
+    * Lines []
+      * [] {}
+	* Stroke
+	* Start {}
+	* End {}
+    * Shapes []
+      * [] {}
+        * Fill
+	* Points []
+	  * [] {}
+	    * x
+	    * y
+	    * length
+	    * angle
+	    * r
+* Format{}
 * Dimensions[]
 
 ### JSON file description for ASSY

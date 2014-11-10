@@ -21,6 +21,35 @@ function Point(x, y, r) {
 }
 
 
+
+//---------------------------------------------------------------------------------------
+// Calculator parser: string --> value
+// Replace a string formula with value of formula result
+//---------------------------------------------------------------------------------------
+function mathEval(exp) {
+    "use strict";
+    var reg = /(?:[a-z$_][a-z0-9$_]*)|(?:[;={}\[\]"'!&<>^\\?:])/ig,
+        valid = true;
+
+    // Detect valid JS identifier names and replace them
+    exp = exp.replace(reg, function ($0) {
+        // If the name is a direct member of Math, allow
+        if (Math.hasOwnProperty($0)) {
+            return "Math." + $0;
+        } else {
+        // Otherwise the expression is invalid
+            valid = false;
+        }
+    });
+
+    // Don't eval if our replace function flagged as invalid
+    if (!valid) {
+        return "Invalid arithmetic expression";
+    } else {
+        try { return eval(exp); } catch (e) { return "Invalid arithmetic expression"; }
+    }
+}
+
 // ------------------------------------------------
 // function: do de-parametrization
 // replace all parameters by the right number value
@@ -41,8 +70,12 @@ function doDeparam(objet) {
         currlines;
     
     // place all object parameters in a table
+    // check if Parameters in object exist before
+    
     for (propr in objet.Parameters) {
-        param.push(propr);
+        if (objet.Parameters.hasOwnProperty(propr)) {
+            param.push(propr);
+        }
     }
     
     // Attention le remplacement ne fonctionne pas toujours
@@ -195,7 +228,7 @@ function drawLine(svgelem, objet) {
                     myLine.setAttribute("stroke", "#000");
                     myLine.setAttribute("stroke-dasharray", "8,6");
                 } else {
-                     myLine.setAttribute("stroke", "#000");
+                    myLine.setAttribute("stroke", "#000");
                 }
                 myLine.setAttribute("stroke-width", 0.75);
                 
@@ -441,35 +474,6 @@ function Shape() {
 }
 
 
-
-//---------------------------------------------------------------------------------------
-// Calculator parser: string --> value
-// Replace a string formula with value of formula result
-//---------------------------------------------------------------------------------------
-function mathEval(exp) {
-    "use strict";
-    var reg = /(?:[a-z$_][a-z0-9$_]*)|(?:[;={}\[\]"'!&<>^\\?:])/ig,
-        valid = true;
-
-    // Detect valid JS identifier names and replace them
-    exp = exp.replace(reg, function ($0) {
-        // If the name is a direct member of Math, allow
-        if (Math.hasOwnProperty($0)) {
-            return "Math." + $0;
-        } else {
-        // Otherwise the expression is invalid
-            valid = false;
-        }
-    });
-
-    // Don't eval if our replace function flagged as invalid
-    if (!valid) {
-        return "Invalid arithmetic expression";
-    } else {
-        try { return eval(exp); } catch (e) { return "Invalid arithmetic expression"; }
-    }
-}
-
 //--------------------------------------------------------------------------------------------
 // Draw dimension
 // input:
@@ -514,14 +518,15 @@ function drawDimension(theSvgElement, objet, dim) {
         break;
     } // switch
     
+    // Add a prefix (ie diamter symbol or R for radius) to dimension
     prefix = "";
     if (typeof dim.Prefix !== "undefined") {
         if (dim.Prefix === "diameter") {
             prefix = "\u2300" + " ";
-        }
-        else {
+        } else if (dim.Prefix === "radius") {
+            prefix = "R" + " ";
+        } else {
             prefix = "";
-            alert(prefix.length)
         }
     }
 	
@@ -529,7 +534,7 @@ function drawDimension(theSvgElement, objet, dim) {
 	if (dim.Direction === "vertical") {
         
         // text
-		stringtoprint = prefix + Math.abs((PtEnd.y - PtStart.y));    
+		stringtoprint = prefix + Math.abs((PtEnd.y - PtStart.y));
     
 	    // 1st calculate the max between starting point and ending point of dimension
 	    maxx = Math.max(scale * PtStart.x + sens * longueur, scale * PtEnd.x + sens * longueur);
