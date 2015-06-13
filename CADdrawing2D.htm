@@ -1,13 +1,23 @@
 <!DOCTYPE HTML>
 <html>
+
 <head>
 	<meta charset="UTF-8">
 	<meta meta name="description" content="2D CAD drawing">
 	<link rel="shortcut icon" href="./img/ruler-triangle.ico" />
 	<title>2D CAD Drawing</title>
+
 	<style>
         body {
-                font-family: "Helvetica", "Arial", "FreeSans", "Verdana", "Tahoma", "Lucida Sans", "Lucida Sans Unicode", "Luxi Sans", sans-serif;
+                font-family: "Helvetica",
+                             "Arial",
+                             "FreeSans",
+                             "Verdana",
+                             "Tahoma",
+                             "Lucida Sans",
+                             "Lucida Sans Unicode",
+                             "Luxi Sans", 
+                             "sans-serif";
             }
         td.menu {
 	           background: #4679bd;
@@ -15,12 +25,14 @@
             }
 	</style>
 	<link rel="stylesheet" type="text/css" href="./jsoneditor/jsoneditor.min.css">
+
 	<script type="text/javascript" src="./jsoneditor/jsoneditor.min.js"></script>
 	<script src="./filereader/filereader.js"></script>
 	<script src="./JScad2d.js"></script>
 	<script src="./zoom.js"></script>
-    <script src="./behavior.js"></script>
+        <script src="./behavior.js"></script>
 </head>
+
 <body>
 <table border="0">
     <tr>
@@ -31,7 +43,9 @@
     </tr>
     <tr>
         <td class="menu">Save file to: </td>
-        <td class="menu"><button onclick="saveTextAsFile()" >JSON</button>&nbsp;<button onclick="saveTextAsSVG()" >SVG</button></td>
+        <td class="menu"><button onclick="saveTextAsFile()" >JSON</button>&nbsp;
+                         <button onclick="saveTextAsSVG()" >SVG</button>
+        </td>
     </tr>
     <tr>
         <td class="menu">
@@ -52,27 +66,30 @@
         <td  class="menu" colspan="3" >
         squeleton: <input class="messageCheckbox" type="checkbox" value="1" name="mailId[]">&nbsp;
         fillet: <input class="messageCheckbox" type="checkbox" value="2" name="mailId[]">&nbsp;
-       <form id="myForm1"> origin: <input class="messageCheckbox" type="checkbox" onclick="drawOrigin(theObj)" value="3" name="mailId[]"></form>&nbsp;
+        <form id="myForm1"> origin: <input class="messageCheckbox" 
+                                          type="checkbox" 
+                                          onclick="drawOrigin(theObj)" 
+                                          value="3" name="mailId[]">
+        </form>&nbsp;
         <button type="button" onclick="doDebug(theObj);">Debug</button>
-     </td></tr>
+        </td>
+     </tr>
 </table>
     
 
 <script type="text/javascript">
     
 // create the editor
+// needed to use JSON Editor
 var container = document.getElementById("jsoneditor");
 var editor = new JSONEditor(container);
     
 // -------------------------------------------
 // Global variable
-
 var theObj;
 var myDoc;
-
 // ------------------------------------------
     
-
 //-------------------------------------------------------------------
 // function:    doInitialization
 //              launch doInitialization at the end of
@@ -104,7 +121,6 @@ function doUpdate() {
     
     // Put all data from JSON editor to theObj
     theObj = editor.get();
-
     // Check box
     var i,
         constructor = null,  // number of checked box
@@ -115,18 +131,15 @@ function doUpdate() {
             break;
         } // if
     } // for
-
     
     // Check if PART or ASSY object
     if (theObj.Header.Type === "part") {
         
     }
         
-
 // -----------------------------------------------
 // Dessin de la forme
 // -------------------------------------------------
-
     var noview,
         noshape,
         noline,
@@ -145,42 +158,52 @@ function doUpdate() {
     limit = {min: {x: 1000000, y: 1000000}, max: {x: -100000, y: -1000000}};
     for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
         currview = theObj.Views[noview];
-	    for (noshape = 0; noshape <= currview.Shapes.length - 1; noshape += 1) {
+	for (noshape = 0; noshape <= currview.Shapes.length - 1; noshape += 1) {
             for (nopt = 0; nopt <= currview.Shapes[noshape].Points.length - 1; nopt += 1) {
-                limit.min.x = Math.min(limit.min.x, currview.Header.Origine.x + currview.Shapes[noshape].Points[nopt].x);
-                limit.min.y = Math.min(limit.min.y, currview.Header.Origine.y - currview.Shapes[noshape].Points[nopt].y);
-                limit.max.x = Math.max(limit.max.x, currview.Header.Origine.x + currview.Shapes[noshape].Points[nopt].x);
-                limit.max.y = Math.max(limit.max.y, currview.Header.Origine.y - currview.Shapes[noshape].Points[nopt].y);
+                limit.min.x = Math.min(limit.min.x, 
+                                       currview.Header.Origine.x + currview.Shapes[noshape].Points[nopt].x);
+                limit.min.y = Math.min(limit.min.y,
+                                       currview.Header.Origine.y - currview.Shapes[noshape].Points[nopt].y);
+                limit.max.x = Math.max(limit.max.x,
+                                       currview.Header.Origine.x + currview.Shapes[noshape].Points[nopt].x);
+                limit.max.y = Math.max(limit.max.y,
+                                       currview.Header.Origine.y - currview.Shapes[noshape].Points[nopt].y);
             } // for
         } // for
     } // for
     
-
     if (typeof theSvgElement === "undefined") {
         // Zoom
         strTmp =  (theObj.Header.Scale * limit.min.x) + " " +
                                             (theObj.Header.Scale * limit.min.y) + " " +
                                             (theObj.Header.Scale * (limit.max.x - limit.min.x)) + " " +
                                             (theObj.Header.Scale * (limit.max.y - limit.min.y));
-        svg = "<svg height=\"400\" width=\"600\" viewBox=\"" + strTmp + "\"  xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
+        svg = "<svg height=\"400\" width=\"600\" viewBox=\"" 
+              + strTmp 
+              + "\"  xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
     } else {
-        var viewBox = theSvgElement.getAttribute('viewBox');	// Grab the object representing the SVG element's viewBox attribute.
-        svg = "<svg height=\"400\" width=\"600\" viewBox=\"" + viewBox + "\"  xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
-    } // if
+        // Grab the object representing the SVG element's viewBox attribute.
+        var viewBox = theSvgElement.getAttribute('viewBox');	
 
+        svg = "<svg height=\"400\" width=\"600\" viewBox=\"" 
+              + viewBox 
+              + "\"  xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
+    } // if
    
+
+    // Add basic information about SVG drawing
     svg += "<title>" + 1 + "</title>";
     svg += "<desc>A path that draws a triangle</desc>";
       
-    // Define arrow for dimension
-	svg += "<defs>";
-	svg += "<marker id=\"markerArrowStart\" markerWidth=\"13\" markerHeight=\"13\" refx=\"2\" refy=\"5\"  orient=\"auto\">";
+    // Define marker (arrow) for dimension
+    svg += "<defs>";
+    svg += "<marker id=\"markerArrowStart\" markerWidth=\"13\" markerHeight=\"13\" refx=\"2\" refy=\"5\"  orient=\"auto\">";
     svg += "<path d=\"M2,5 L10,9 L10,2 L2,5\" style=\"fill:" + theObj.Format.Dimensions_color + ";\" />";
-	svg += "</marker>";
-	svg += "<marker id=\"markerArrowEnd\" markerWidth=\"13\" markerHeight=\"13\" refx=\"10\" refy=\"5\"  orient=\"auto\">";
+    svg += "</marker>";
+    svg += "<marker id=\"markerArrowEnd\" markerWidth=\"13\" markerHeight=\"13\" refx=\"10\" refy=\"5\"  orient=\"auto\">";
     svg += "<path d=\"M2,2 L2,9 L10,5 L2,2\" style=\"fill:" + theObj.Format.Dimensions_color + ";\" />";
-	svg += "</marker>";
-	svg += "</defs>";
+    svg += "</marker>";
+    svg += "</defs>";
     
     
     // Patern for hatch
@@ -201,22 +224,20 @@ function doUpdate() {
 	    } // if
     } // for
 
-
     // draw shape (with rounded corner if specified)
     for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
         currview = theObj.Views[noview];
 	    for (noshape = 0; noshape <= currview.Shapes.length - 1; noshape += 1) {
-		    svg += Shape(currview.Header.Name,
-                 currview.Shapes[noshape].Points,
-                 theObj.Header.Scale,
-                 currview.Header.Origine,
-                 currview.Shapes[noshape].Fill,
-                 noview,
-                 constructor,
-                 theObj.Format);
+		 svg += Shape(currview.Header.Name,
+                              currview.Shapes[noshape].Points,
+                              theObj.Header.Scale,
+                              currview.Header.Origine,
+                              currview.Shapes[noshape].Fill,
+                              noview,
+                              constructor,
+                              theObj.Format);
 	    } // for
     } // for
-
 
     // Add containers: dimension, origin and lines
     svg += "\n<g id=\"dimension\"></g>";
@@ -224,18 +245,16 @@ function doUpdate() {
     svg += "\n<g id=\"lines\"></g>";
     svg += "\n</svg>";
     
+    // Draw SVG in MyDoc window
     myDoc.getElementById("drawing1").innerHTML = svg;
+
+    // catch SVG in theSvgElement variable for further function
     theSvgElement = myDoc.getElementsByTagName("svg")[0];
     
-    // This is to draw Drawing in the current window with jsoneditor
-    //document.getElementById("drawing").innerHTML = svg;
-    //theSvgElement = document.getElementsByTagName("svg")[0];
-    
-    // draw Lines
+    // draw Lines from theSvgElement
     drawLine(theSvgElement, theObj);
-
     
-    // draw dimension
+    // draw dimension from the SvgElement
     for (nodim = 0; nodim <= theObj.Dimensions.length - 1; nodim += 1) {
 	    svg += drawDimension(theSvgElement, theObj, theObj.Dimensions[nodim]);
     } // for
@@ -243,10 +262,8 @@ function doUpdate() {
     // draw origin point for each view
     drawOrigin(theObj);
     
-
     return svg;
 }
-
        
  
 // ------------------------------------------------
@@ -254,17 +271,14 @@ function doUpdate() {
 // draw a filled circle at each view origin
 // input : objet = the Object json file
 // ------------------------------------------------
-
 function drawOrigin(objet) {
     "use strict";
     
 	var x = document.forms.myForm1,
         noview,
         txtsvg = "",
-
         currview = objet.Views;
     
-
 	if (x[0].checked === true) {
 		// draw origin for each View
 		for (noview = 0; noview <= currview.length - 1; noview += 1) {
@@ -285,7 +299,6 @@ function drawOrigin(objet) {
 					   
 	return 0;
 } // drawOrigin
-
 
 
 // Load a JSON document
@@ -311,7 +324,6 @@ function saveTextAsSVG() {
 	var textFileAsBlob = new Blob([textToWrite], {type: 'text/plain'});
 	var fileNameToSaveAs = json.Header.Name + "_svg.svg";
 	
-
 	var downloadLink = document.createElement("a");
 	downloadLink.download = fileNameToSaveAs;
 	downloadLink.innerHTML = "Download File";
@@ -329,9 +341,9 @@ function saveTextAsSVG() {
 		document.body.appendChild(downloadLink);
 		
 	}
-
 	downloadLink.click();
 }
+
   
 // save file
 function saveTextAsFile() {
@@ -345,10 +357,8 @@ function saveTextAsFile() {
     var fileNameToSaveAs = json.Header.Name + ".json";
 	
 	var downloadLink = document.createElement("a");
-
 	downloadLink.download = fileNameToSaveAs;
 	downloadLink.innerHTML = "Download File";
-
 	if (typeof window.webkitURL !== "undefined") {
 		// Chrome allows the link to be clicked
 		// without actually adding it to the DOM.
@@ -356,20 +366,20 @@ function saveTextAsFile() {
 	} else {
 		// Firefox requires the link to be added to the DOM
 		// before it can be clicked.
-
 		downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
 		downloadLink.onclick = destroyClickedElement;
 		downloadLink.style.display = "none";
 		document.body.appendChild(downloadLink);
 	}
-
 	downloadLink.click();
 }
+
 
 function destroyClickedElement(event) {
     "use strict";
 	document.body.removeChild(event.target);
 } // destroyClickedElement
+
 
 //-------------------------------------------------------------
 // Test if str is JSON format
@@ -382,7 +392,6 @@ function IsJsonString(str) {
     }
     return true;
 }
-
 </script>
 
 
