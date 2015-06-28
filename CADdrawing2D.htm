@@ -153,6 +153,7 @@ function doUpdate() {
     
     // replace parameters by value and evaluate formula
     theObj = doDeparam(theObj);
+    theObj = doCoordonate(theObj);
     
     // Here place function to find min x & min y & max x & max y to automatize the viewBox behavior
     limit = {min: {x: 1000000, y: 1000000}, max: {x: -100000, y: -1000000}};

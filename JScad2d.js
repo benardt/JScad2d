@@ -93,7 +93,7 @@ function doDeparam(objet) {
 			        for (noprop = 0; noprop <= param.length - 1; noprop += 1) {
 				        reg = new RegExp(param[noprop], "g");
 				        currshapes[noshape].Points[i].x = currshapes[noshape].Points[i].x.replace(reg, " " + objet.Parameters[param[noprop]]);
-                    } // for
+				} // for
 		        } // if
 		        if (typeof currshapes[noshape].Points[i].y === 'string' || currshapes[noshape].Points[i].y instanceof String) {
 			        for (noprop = 0; noprop <= param.length - 1; noprop += 1) {
@@ -105,6 +105,12 @@ function doDeparam(objet) {
 			        for (noprop = 0; noprop <= param.length - 1; noprop += 1) {
 				        reg = new RegExp(param[noprop], "g");
 				        currshapes[noshape].Points[i].r = currshapes[noshape].Points[i].r.replace(reg, " " + objet.Parameters[param[noprop]]);
+			        } // for
+		        } // if
+		        if (typeof currshapes[noshape].Points[i].length === 'string' || currshapes[noshape].Points[i].length instanceof String) {
+			        for (noprop = 0; noprop <= param.length - 1; noprop += 1) {
+				        reg = new RegExp(param[noprop], "g");
+				        currshapes[noshape].Points[i].length = currshapes[noshape].Points[i].length.replace(reg, " " + objet.Parameters[param[noprop]]);
 			        } // for
 		        } // if
 	        } // for
@@ -156,6 +162,11 @@ function doDeparam(objet) {
                 if (currshapes[noshape].Points[i].r !== null) {
                     currshapes[noshape].Points[i].r = mathEval("(" + currshapes[noshape].Points[i].r + ")");
                 } // if
+		
+                if (currshapes[noshape].Points[i].length !== null) {
+                    currshapes[noshape].Points[i].length = mathEval("(" + currshapes[noshape].Points[i].length + ")");
+                } // if
+		
             } // for
         } // for
     } // for
@@ -163,6 +174,46 @@ function doDeparam(objet) {
     return objet;
 }
 
+
+// ------------------------------------------------
+// function: do coordonate
+// Calculate x & y coordantes from polar coordinate
+// input : objet = the Object json file
+// ------------------------------------------------
+function doCoordonate(objet) {
+    "use strict";
+	
+	var 	noview,
+		currshapes,
+		noshape,
+		nopoint;
+
+    // all views
+    for (noview = 0; noview <= objet.Views.length - 1; noview += 1) {
+        currshapes = objet.Views[noview].Shapes;
+	    
+        // all shapes of current view
+        for (noshape = 0; noshape <= currshapes.length - 1; noshape += 1) {
+            // all points of current shape of current view
+		// do not start at point #0 because need a first reference
+	        for (nopoint = 1; nopoint <= currshapes[noshape].Points.length - 1; nopoint += 1) {
+			// First check if current Point include length parameter & angle parameter
+			
+		        if (typeof currshapes[noshape].Points[nopoint].length !== "undefined" && typeof currshapes[noshape].Points[nopoint].angle !== "undefined" ) {
+				if (currshapes[noshape].Points[nopoint].length !== null && currshapes[noshape].Points[nopoint].angle !== null) {
+					currshapes[noshape].Points[nopoint].x = currshapes[noshape].Points[nopoint - 1].x + 
+					    currshapes[noshape].Points[nopoint].length * Math.cos(currshapes[noshape].Points[nopoint].angle * Math.PI / 180.0);
+					currshapes[noshape].Points[nopoint].y = currshapes[noshape].Points[nopoint - 1].y + 
+					    currshapes[noshape].Points[nopoint].length * Math.sin(currshapes[noshape].Points[nopoint].angle * Math.PI / 180.0);
+					
+				} // if
+		        } // if
+	        } // for
+        } // for
+    } // for
+
+    return objet;
+}
 
 // --------------------------------------------------
 // Function
