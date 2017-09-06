@@ -1,0 +1,384 @@
+{
+  "Header": {
+    "Type": "part",
+    "Name": "Part-spigot",
+    "Title": "Spigot SAEJ2044 6.35",
+    "Unit": "mm",
+    "Scale": 10
+  },
+  "Parameters": {
+    "A": 6.3,
+    "B": 8.75,
+    "C": 1.6,
+    "ID": 3.8,
+    "D": 19.31,
+    "F": 9.5
+  },
+  "Views": [
+    {
+      "Header": {
+        "Origine": {
+          "x": 20,
+          "y": 10
+        },
+        "Name": "Right",
+        "Hatch": {
+          "Color": "red",
+          "Angle": 45,
+          "Distance": 6
+        }
+      },
+      "Lines": [
+        {
+          "Stroke": "exter",
+          "Start": {
+            "x": 0,
+            "y": 0
+          },
+          "End": {
+            "x": 0,
+            "y": 1.9
+          }
+        },
+        {
+          "Stroke": "exter",
+          "Start": {
+            "x": 30.41,
+            "y": 0
+          },
+          "End": {
+            "x": 30.41,
+            "y": 1.9
+          }
+        },
+        {
+          "Stroke": "center line",
+          "Start": {
+            "x": -2,
+            "y": 0
+          },
+          "End": {
+            "x": 40,
+            "y": 0
+          }
+        },
+        {
+          "Stroke": "dashed",
+          "Start": {
+            "x": 19.31,
+            "y": 0
+          },
+          "End": {
+            "x": 19.31,
+            "y": -3.2
+          }
+        },
+        {
+          "Stroke": "fill",
+          "Start": {
+            "x": 20.91,
+            "y": 0
+          },
+          "End": {
+            "x": 20.91,
+            "y": -3.2
+          }
+        }
+      ],
+      "Shapes": [
+        {
+          "Fill": "hatch",
+          "Points": [
+            {
+              "x": 0,
+              "y": 1.9,
+              "length": null,
+              "angle": null,
+              "r": null
+            },
+            {
+              "x": 0,
+              "y": 3.15,
+              "length": null,
+              "angle": null,
+              "r": 1.2
+            },
+            {
+              "x": 19.31,
+              "y": 3.15,
+              "length": null,
+              "angle": null,
+              "r": 0.5
+            },
+            {
+              "x": 19.31,
+              "y": 4.375,
+              "length": null,
+              "angle": null,
+              "r": 0.8
+            },
+            {
+              "x": 20.91,
+              "y": 4.375,
+              "length": null,
+              "angle": null,
+              "r": 0.4
+            },
+            {
+              "x": 20.91,
+              "y": 3.15,
+              "length": null,
+              "angle": null,
+              "r": 0.4
+            },
+            {
+              "x": 30.41,
+              "y": 3.15,
+              "length": null,
+              "angle": null,
+              "r": null
+            },
+            {
+              "x": 30.41,
+              "y": 1.9,
+              "length": null,
+              "angle": null,
+              "r": null
+            }
+          ]
+        },
+        {
+          "Fill": null,
+          "Points": [
+            {
+              "x": 0,
+              "y": 0,
+              "length": null,
+              "angle": null,
+              "r": null
+            },
+            {
+              "x": 0,
+              "y": -3.15,
+              "length": null,
+              "angle": null,
+              "r": 1.2
+            },
+            {
+              "x": 19.31,
+              "y": -3.15,
+              "length": null,
+              "angle": null,
+              "r": 0.5
+            },
+            {
+              "x": 19.31,
+              "y": -4.375,
+              "length": null,
+              "angle": null,
+              "r": 0.8
+            },
+            {
+              "x": 20.91,
+              "y": -4.375,
+              "length": null,
+              "angle": null,
+              "r": 0.4
+            },
+            {
+              "x": 20.91,
+              "y": -3.15,
+              "length": null,
+              "angle": null,
+              "r": 0.4
+            },
+            {
+              "x": 30.41,
+              "y": -3.15,
+              "length": null,
+              "angle": null,
+              "r": null
+            },
+            {
+              "x": 30.41,
+              "y": 0,
+              "length": null,
+              "angle": null,
+              "r": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Header": {
+        "Origine": {
+          "x": 6,
+          "y": 10
+        },
+        "Name": "Front",
+        "Hatch": {
+          "Color": "blue",
+          "Angle": 45,
+          "Distance": 6
+        }
+      },
+      "Shapes": [
+        {
+          "Fill": null,
+          "Points": [
+            {
+              "x": -4.375,
+              "y": 4.375,
+              "length": null,
+              "angle": null,
+              "r": 4.375
+            },
+            {
+              "x": 4.375,
+              "y": 4.375,
+              "length": null,
+              "angle": null,
+              "r": 4.375
+            },
+            {
+              "x": 4.375,
+              "y": -4.375,
+              "length": null,
+              "angle": null,
+              "r": 4.375
+            },
+            {
+              "x": -4.375,
+              "y": -4.375,
+              "length": null,
+              "angle": null,
+              "r": 4.375
+            }
+          ]
+        },
+        {
+          "Fill": "hatch",
+          "Points": [
+            {
+              "x": -3.15,
+              "y": 3.15,
+              "length": null,
+              "angle": null,
+              "r": 3.15
+            },
+            {
+              "x": 3.15,
+              "y": 3.15,
+              "length": null,
+              "angle": null,
+              "r": 3.15
+            },
+            {
+              "x": 3.15,
+              "y": -3.15,
+              "length": null,
+              "angle": null,
+              "r": 3.15
+            },
+            {
+              "x": -3.15,
+              "y": -3.15,
+              "length": null,
+              "angle": null,
+              "r": 3.15
+            }
+          ]
+        },
+        {
+          "Fill": null,
+          "Points": [
+            {
+              "x": -1.9,
+              "y": 1.9,
+              "length": null,
+              "angle": null,
+              "r": 1.9
+            },
+            {
+              "x": 1.9,
+              "y": 1.9,
+              "length": null,
+              "angle": null,
+              "r": 1.9
+            },
+            {
+              "x": 1.9,
+              "y": -1.9,
+              "length": null,
+              "angle": null,
+              "r": 1.9
+            },
+            {
+              "x": -1.9,
+              "y": -1.9,
+              "length": null,
+              "angle": null,
+              "r": 1.9
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Format": {
+    "shape_thick": 3,
+    "font_size": 12,
+    "Hatch_thick": 1,
+    "Dimensions_color": "gold"
+  },
+  "Dimensions": [
+    {
+      "PtStart": {
+        "View": 0,
+        "Shape": 1,
+        "Point": 4
+      },
+      "PtEnd": {
+        "View": 0,
+        "Shape": 1,
+        "Point": 6
+      },
+      "Direction": "horizontal",
+      "Sens": "bottom",
+      "FreeSpace": 60,
+      "Prefix": "diameter"
+    },
+    {
+      "PtStart": {
+        "View": 0,
+        "Shape": 0,
+        "Point": 4
+      },
+      "PtEnd": {
+        "View": 0,
+        "Shape": 0,
+        "Point": 6
+      },
+      "Direction": "horizontal",
+      "Sens": "top",
+      "FreeSpace": 60
+    },
+    {
+      "PtStart": {
+        "View": 1,
+        "Shape": 0,
+        "Point": 1
+      },
+      "PtEnd": {
+        "View": 1,
+        "Shape": 0,
+        "Point": 2
+      },
+      "Direction": "vertical",
+      "Sens": "right",
+      "FreeSpace": 40,
+      "Prefix": "diameter"
+    }
+  ]
+}

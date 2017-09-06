@@ -2,7 +2,7 @@
         Function for 2D cad drawing
         
         
-        
+       
         Author: Thierry Bénard
         Date: 16 Sep 2014
 
@@ -29,10 +29,11 @@ function Point(x, y, r) {
 function mathEval(exp) {
     "use strict";
     var reg = /(?:[a-z$_][a-z0-9$_]*)|(?:[;={}\[\]"'!&<>^\\?:])/ig,
-        valid = true;
+        valid = true,
+        myVar;
 
     // Detect valid JS identifier names and replace them
-    exp = exp.replace(reg, function ($0) {
+    myVar = exp.replace(reg, function ($0) {
         // If the name is a direct member of Math, allow
         if (Math.hasOwnProperty($0)) {
             return "Math." + $0;
@@ -46,7 +47,7 @@ function mathEval(exp) {
     if (!valid) {
         return "Invalid arithmetic expression";
     } else {
-        try { return eval(exp); } catch (e) { return "Invalid arithmetic expression"; }
+        try { return eval(myVar); } catch (e) { return "Invalid arithmetic expression"; }
     }
 }
 
@@ -585,7 +586,7 @@ function drawDimension(theSvgElement, objet, dim) {
 	if (dim.Direction === "vertical") {
         
         // text
-		stringtoprint = prefix + Math.abs((PtEnd.y - PtStart.y));
+		stringtoprint = prefix + Math.abs(PtEnd.y - PtStart.y);
     
 	    // 1st calculate the max between starting point and ending point of dimension
 	    maxx = Math.max(scale * PtStart.x + sens * longueur, scale * PtEnd.x + sens * longueur);
@@ -613,7 +614,7 @@ function drawDimension(theSvgElement, objet, dim) {
         line3.setAttribute("x1", scale * (Ori.x) + (maxx - sens * eloignement));
         line3.setAttribute("y1", scale * (Ori.y - PtStart.y));
         line3.setAttribute("x2", scale * (Ori.x) + (maxx - sens * eloignement));
-        line3.setAttribute("y2", scale * (Ori.y - PtStart.y - 0.5 * (PtEnd.y - PtStart.y)) - 1 * textheight);
+        line3.setAttribute("y2", scale * (Ori.y - PtStart.y - 0.5 * (PtEnd.y - PtStart.y)) - Number(textheight));
         line3.setAttribute("stroke", objet.Format.Dimensions_color);
 	    line3.setAttribute('marker-start', 'url(#markerArrowStart)');
 	    //line3.setAttribute('marker-end', 'url(#markerArrowEnd)');
@@ -622,7 +623,7 @@ function drawDimension(theSvgElement, objet, dim) {
 		// Global line end
 	    line4 = document.createElementNS("http://www.w3.org/2000/svg", "line");
         line4.setAttribute("x1", scale * (Ori.x) + (maxx - sens * eloignement));
-        line4.setAttribute("y1", scale * (Ori.y - PtStart.y - 0.5 * (PtEnd.y - PtStart.y)) + 1 * textheight);
+        line4.setAttribute("y1", scale * (Ori.y - PtStart.y - 0.5 * (PtEnd.y - PtStart.y)) + Number(textheight));
         line4.setAttribute("x2", scale * (Ori.x) + (maxx - sens * eloignement));
         line4.setAttribute("y2", scale * (Ori.y - PtEnd.y));
         line4.setAttribute("stroke", objet.Format.Dimensions_color);

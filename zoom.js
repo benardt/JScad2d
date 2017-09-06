@@ -1,12 +1,14 @@
-
+/**
+ * Some functions
+ * - zoom & pan
+ * - initialize
+ * - debug
+ */
 
 function doDebug(myObj) {
     "use strict";
     
-    var i,
-        strTmp,
-        nbpoint,
-        myWindow,
+    var myWindow,
         myDocDebug;
     
     // Open new window for debug
