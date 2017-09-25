@@ -132,10 +132,10 @@
               "r": 0.4
             },
             {
-              "x": 30.41,
-              "y": 3.15,
-              "length": null,
-              "angle": null,
+              "x": null,
+              "y": null,
+              "length": 9.50,
+              "angle": 0,
               "r": null
             },
             {

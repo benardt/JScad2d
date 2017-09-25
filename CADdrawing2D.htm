@@ -63,7 +63,9 @@
 		<tr>
 			<td class="menu" colspan="3">
 				squeleton: <input class="messageCheckbox" type="checkbox" value="1" name="">&nbsp;
-				fillet: <input class="messageCheckbox" type="checkbox" value="2" name="">&nbsp;
+				<form id="myForm2"> fillet: 
+					<input class="messageCheckbox" type="checkbox" onclick="drawFilletpts()" value="2" name="">&nbsp;
+				</form>
 				<form id="myForm1"> origin:
 					<input class="messageCheckbox" type="checkbox" onclick="drawOrigin(theObj)" value="3" name="Origin">
 				</form>&nbsp;
@@ -138,22 +140,24 @@
 			}
 
 			// -----------------------------------------------
-			// Dessin de la forme
+			// Draw the shaoe
 			// -------------------------------------------------
-			var noview,
-				noshape,
-				nopt,
-				strTmp,
-				svg,
-				nodim,
-				currview,
+			var noview = 0,
+				noshape = 0,
+				nopt = 0,
+				strTmp = "",
+				svg = "",
+				nodim = 0,
+				currview = {},
 				limit = {};
 
 
 			// replace parameters by value and evaluate formula
 			theObj = doDeparam(theObj);
+			// put all coordinates in cartesian
 			theObj = doCoordonate(theObj);
 
+			// Initialize SVG with VIEW BOX -----------------------------------------
 			// Here place function to find min x & min y & max x & max y to automatize the viewBox behavior
 			limit = {
 				min: {
@@ -198,6 +202,7 @@
 					viewBox +
 					"\"  xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
 			} // if
+			// End of initialize SVG with VIEW BOX -----------------------------------------
 
 
 			// Add basic information about SVG drawing
@@ -218,7 +223,7 @@
 			// Patern for hatch
 			for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
 				if (theObj.Views[noview].Header.Hatch.Distance !== null) {
-					svg += "\n<defs>";
+					svg += "<defs>";
 					svg += "<pattern id=\"diagonalHatch" + "View" + noview + "\" " +
 						"patternUnits=\"userSpaceOnUse\" " +
 						"width=\"" + theObj.Views[noview].Header.Hatch.Distance + "\" " +
@@ -228,7 +233,7 @@
 						"stroke=\"" + theObj.Views[noview].Header.Hatch.Color + "\" " +
 						"stroke-width=\"" + theObj.Format.Hatch_thick + "\"/>";
 					svg += "</pattern>";
-					svg += "\n</defs>";
+					svg += "</defs>";
 				} // if
 			} // for
 
@@ -269,6 +274,9 @@
 
 			// draw origin point for each view
 			drawOrigin(theObj);
+			
+
+			drawFilletpts();
 
 			return svg;
 		}
@@ -305,7 +313,28 @@
 
 			return 0;
 		} // drawOrigin
+		
+		/**
+		 * draw point constructor for fillet
+		 */
+		function drawFilletpts() {
+			"use strict";
+			var x = document.forms.myForm2;
+			if (x[0].checked === true) {
+				var nodes = theSvgElement.getElementsByClassName('ptsfillet');
+	
+				for (var i=0, len = nodes.length; i < len; i++) {
+   					nodes[i].style.visibility = "visible";
+				}
 
+			} else if (x[0].checked === false) {
+				nodes = theSvgElement.getElementsByClassName('ptsfillet');
+				for (i=0, len = nodes.length; i < len; i++) {
+   					nodes[i].style.visibility = "hidden";
+				}
+			}
+			return 0;
+		}
 
 		/**
 		 * Load a JSON document from local disk
