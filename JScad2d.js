@@ -261,51 +261,50 @@ function getWidthString(the_text_that_you_want_to_measure, fontsize, fontname) {
  * @param {} svgelem
  * @param {object} objet
  */
-function drawLine(svgelem, myObject) {
+function drawLine(noview, svgelem, myObject) {
 	"use strict";
 
-	var noview,
-		noline,
-		currview,
-		scale,
-		myLine,
+	var noline = 0,
+		myViewid,
+		currview = {},
+		scale = 1,
+		myLine, // element of DOM Document Object Model
 		myLineStyle = [];
 
 	myLineStyle = ['center line', 'dashed'];
 
 	scale = myObject.Header.Scale;
 
-	for (noview = 0; noview <= myObject.Views.length - 1; noview += 1) {
-		currview = myObject.Views[noview];
-		if (typeof myObject.Views[noview].Lines !== "undefined") { // Checking mandatory if not bug !!!!
-			for (noline = 0; noline <= currview.Lines.length - 1; noline += 1) {
+	currview = myObject.Views[noview];
+	if (typeof myObject.Views[noview].Lines !== "undefined") { // Checking mandatory if not bug !!!!
+		for (noline = 0; noline <= currview.Lines.length - 1; noline += 1) {
 
-				myLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+			myLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
 
-				myLine.setAttribute("x1", scale * (currview.Header.Origine.x + currview.Lines[noline].Start.x));
-				myLine.setAttribute("y1", scale * (currview.Header.Origine.y - currview.Lines[noline].Start.y));
+			myLine.setAttribute("x1", scale * (currview.Header.Origine.x + currview.Lines[noline].Start.x));
+			myLine.setAttribute("y1", scale * (currview.Header.Origine.y - currview.Lines[noline].Start.y));
 
-				myLine.setAttribute("x2", scale * (currview.Header.Origine.x + currview.Lines[noline].End.x));
-				myLine.setAttribute("y2", scale * (currview.Header.Origine.y - currview.Lines[noline].End.y));
+			myLine.setAttribute("x2", scale * (currview.Header.Origine.x + currview.Lines[noline].End.x));
+			myLine.setAttribute("y2", scale * (currview.Header.Origine.y - currview.Lines[noline].End.y));
 
-				// Define line style:
-				// center line: Done
-				// dashet line: To do
-				if (currview.Lines[noline].Stroke === myLineStyle[0]) {
-					myLine.setAttribute("stroke", "#999");
-					myLine.setAttribute("stroke-dasharray", "25,6,8,6");
-				} else if (currview.Lines[noline].Stroke === myLineStyle[1]) {
-					myLine.setAttribute("stroke", "#000");
-					myLine.setAttribute("stroke-dasharray", "8,6");
-				} else {
-					myLine.setAttribute("stroke", "#000");
-				}
-				myLine.setAttribute("stroke-width", 0.75);
+			// Define line style:
+			// center line: Done
+			// dashet line: To do
+			if (currview.Lines[noline].Stroke === myLineStyle[0]) {
+				myLine.setAttribute("stroke", "#999");
+				myLine.setAttribute("stroke-dasharray", "25,6,8,6");
+			} else if (currview.Lines[noline].Stroke === myLineStyle[1]) {
+				myLine.setAttribute("stroke", "#000");
+				myLine.setAttribute("stroke-dasharray", "8,6");
+			} else {
+				myLine.setAttribute("stroke", "#000");
+			}
+			myLine.setAttribute("stroke-width", 0.75);
+			myViewid = "view" + noview;
+			svgelem.getElementById(myViewid).appendChild(myLine);
+		} // for
+	} //if
 
-				svgelem.getElementById("lines").appendChild(myLine);
-			} // for
-		} //if
-	} // for
 
 	return 0;
 }
@@ -331,14 +330,14 @@ function drawLine(svgelem, myObject) {
 function Shape() {
 	"use strict";
 	var i,
+		myText = "",
 		ttexte, // variable texte à retourner
 		pts = arguments[1], // points du squelette de la forme pleine
 		scale = arguments[2], // échelle de l'affichage
 		ori = arguments[3], // origine du dessin
 		texture = arguments[4], // texture
 		noview = arguments[5], // view # for hatch pattern
-		affichage = arguments[6], // 1: affiche, 0: n'affiche pas
-		format = arguments[7], // format
+		format = arguments[6], // format
 
 		p = [], // number of previous point
 		s = [], // number of next point
@@ -356,19 +355,6 @@ function Shape() {
 		m,
 		n,
 		KAPPA = 0.5522847498;
-
-	// print squeleton in red
-	if (affichage === 1) {
-		// courbe d'origine sans les fillet pour le debug
-		ttexte = "<g id=\"squeleton\"><path d=\"M";
-		for (i = 0; i <= pts.length - 1; i += 1) {
-			ttexte += " " + (scale * (ori.x + pts[i].x)) + " " + (scale * (ori.y - pts[i].y)) + " L";
-		}
-		ttexte = ttexte.substring(0, ttexte.length - 2);
-		ttexte += "z\" fill=\"white\" stroke=\"red\" stroke-width=\"1\" /></g>";
-	}
-
-
 
 	// find number for previous and next point
 	// p is number of previous point
@@ -441,10 +427,10 @@ function Shape() {
 	}
 
 	// shape with fillet
-	ttexte += "<g><path d=\"M";
+	myText = "<g class=\"basicshape\" ><path d=\"M";
 	for (i = 0; i <= pts.length - 1; i += 1) {
 		if (pts[i].r !== null) {
-			ttexte += (scale * (ori.x + pr[2 * i].x)) + "," +
+			myText += (scale * (ori.x + pr[2 * i].x)) + "," +
 				(scale * (ori.y - pr[2 * i].y)) + " C" +
 				(scale * (ori.x + pr[2 * i + 1].x)) + "," +
 				(scale * (ori.y - pr[2 * i + 1].y)) + " " +
@@ -453,28 +439,19 @@ function Shape() {
 				(scale * (ori.x + su[2 * i].x)) + "," +
 				(scale * (ori.y - su[2 * i].y)) + " L";
 		} else {
-			ttexte += (scale * (ori.x + pts[i].x)) + "," + (scale * (ori.y - pts[i].y)) + " L";
+			myText += (scale * (ori.x + pts[i].x)) + "," + (scale * (ori.y - pts[i].y)) + " L";
 		}
 	}
-
-	ttexte = ttexte.substring(0, ttexte.length - 2);
+	// remove the last " L" because they are no new point.
+	myText = myText.substring(0, myText.length - 2);
 
 	// texture de la forme
 	if (texture === "hatch") {
-		ttexte += "z\" fill=\"url(#diagonalHatch" + "View" + noview + ")\" stroke=\"black\" stroke-width=\"2\" /></g>";
+		myText += "z\" fill=\"url(#diagonalHatch" + "View" + noview + ")\" stroke=\"black\" stroke-width=\"2\" /></g>";
 	} else {
-		ttexte += "z\" fill=\"white\" stroke=\"black\" stroke-width=\"2\" /></g>";
+		myText += "z\" fill=\"white\" stroke=\"black\" stroke-width=\"2\" /></g>";
 	}
-
-	// Print key points of shape (squeleton)
-	if (affichage === 1) {
-		// Affiche les numéros de chaque point
-		for (i = 0; i <= pts.length - 1; i += 1) {
-			ttexte += "<text x=\"" + (scale * (ori.x + pts[i].x)) + "\"" +
-				" y=\"" + (scale * (ori.y - pts[i].y)) + "\"" +
-				" font-size=\"" + format.font_size + "\" fill=\"red\">" + i + "</text>";
-		}
-	}
+	ttexte += myText;
 
 	// Print key points of fillet (squeleton)
 	// class allow to print or not with .style.visibility property
@@ -497,68 +474,91 @@ function Shape() {
 	}
 	ttexte += "</g>";
 
+	// Print key points of shape (squeleton)
+
+	ttexte += "<g class=\"squeletontext\" >";
+	// Affiche les numéros de chaque point
+	for (i = 0; i <= pts.length - 1; i += 1) {
+		ttexte += "<text x=\"" + (scale * (ori.x + pts[i].x)) + "\"" +
+			" y=\"" + (scale * (ori.y - pts[i].y)) + "\"" +
+			" font-size=\"" + format.font_size + "\" fill=\"red\">" + i + "</text>";
+	}
+	ttexte += "</g>";
+
+
+	// print squeleton in red
+
+	// courbe d'origine sans les fillet pour le debug
+	ttexte += "<g class=\"squeleton\"><path d=\"M";
+	for (i = 0; i <= pts.length - 1; i += 1) {
+		ttexte += " " + (scale * (ori.x + pts[i].x)) + " " + (scale * (ori.y - pts[i].y)) + " L";
+	}
+	ttexte = ttexte.substring(0, ttexte.length - 2);
+	ttexte += "z\" fill=\"white\" fill-opacity=\"0.25\" stroke=\"red\" stroke-width=\"1\" /></g>";
+
+
 	// Print center of fillet (in red)
-	if (affichage === 1) {
-		var ma, ca, mb, cb,
-			x0, x1, y0, y1;
-		ttexte += "<g class=\"centerfillet\" style=\"visibility:visible;\">";
-		// visibility:hidden or visibility:visible
-		for (i = 0; i <= pts.length - 1; i += 1) {
-			if (pts[i].r !== null) {
-				// rotation du point de base autour du point de départ du congé de 90°
-				// 1. changement de repère
-				x1 = pts[i].x - pr[2 * i].x;
-				y1 = pts[i].y - pr[2 * i].y;
-				// 2. rotation de 90°
-				x0 = -y1;
-				y0 = x1;
-				// 3. changement de repère inverse
-				x0 = x0 + pr[2 * i].x;
-				y0 = y0 + pr[2 * i].y;
 
-				x1 = pr[2 * i].x;
-				y1 = pr[2 * i].y;
+	var ma, ca, mb, cb,
+		x0, x1, y0, y1;
+	ttexte += "<g class=\"centerfillet\" style=\"visibility:visible;\">";
+	// visibility:hidden or visibility:visible
+	for (i = 0; i <= pts.length - 1; i += 1) {
+		if (pts[i].r !== null) {
+			// rotation du point de base autour du point de départ du congé de 90°
+			// 1. changement de repère
+			x1 = pts[i].x - pr[2 * i].x;
+			y1 = pts[i].y - pr[2 * i].y;
+			// 2. rotation de 90°
+			x0 = -y1;
+			y0 = x1;
+			// 3. changement de repère inverse
+			x0 = x0 + pr[2 * i].x;
+			y0 = y0 + pr[2 * i].y;
 
-				// Calcul des paramètres de la droite
-				ma = (y1 - y0) / (x1 - x0);
-				ca = (x1 * y0 - x0 * y1) / (x1 - x0);
+			x1 = pr[2 * i].x;
+			y1 = pr[2 * i].y;
 
-				// rotation du point de base autour du point de départ du congé de 90°
-				// 1. changement de repèe
-				x1 = pts[i].x - su[2 * i].x;
-				y1 = pts[i].y - su[2 * i].y;
-				// 2. rotation de 90°
-				x0 = -y1;
-				y0 = x1;
-				// 3. changement de repère inverse
-				x0 = x0 + su[2 * i].x;
-				y0 = y0 + su[2 * i].y;
+			// Calcul des paramètres de la droite
+			ma = (y1 - y0) / (x1 - x0);
+			ca = (x1 * y0 - x0 * y1) / (x1 - x0);
 
-				x1 = su[2 * i].x;
-				y1 = su[2 * i].y;
-				// Calcul des paramètres de la droite
-				mb = (y1 - y0) / (x1 - x0);
-				cb = (x1 * y0 - x0 * y1) / (x1 - x0);
+			// rotation du point de base autour du point de départ du congé de 90°
+			// 1. changement de repèe
+			x1 = pts[i].x - su[2 * i].x;
+			y1 = pts[i].y - su[2 * i].y;
+			// 2. rotation de 90°
+			x0 = -y1;
+			y0 = x1;
+			// 3. changement de repère inverse
+			x0 = x0 + su[2 * i].x;
+			y0 = y0 + su[2 * i].y;
 
-				// prise en compte des droites verticales m = infini ou -infini
-				if (ma === "Infinity" || ma === "-Infinity") {
-					x0 = pr[2 * i].x;
-					y0 = mb * x0 + cb;
-				} else if (mb === "Infinity" || mb === "-Infinity") {
-					x0 = su[2 * i].x;
-					y0 = ma * x0 + ca;
-				} else {
-					x0 = (cb - ca) / (ma - mb);
-					y0 = ma * x0 + ca;
-				}
+			x1 = su[2 * i].x;
+			y1 = su[2 * i].y;
+			// Calcul des paramètres de la droite
+			mb = (y1 - y0) / (x1 - x0);
+			cb = (x1 * y0 - x0 * y1) / (x1 - x0);
 
-				ttexte += "<circle cx=\"" + (scale * (ori.x + x0)) +
-					"\" cy=\"" + (scale * (ori.y - y0)) +
-					"\" r=\"4\" stroke-width=\"0\" fill=\"red\"/>";
+			// prise en compte des droites verticales m = infini ou -infini
+			if (ma === "Infinity" || ma === "-Infinity") {
+				x0 = pr[2 * i].x;
+				y0 = mb * x0 + cb;
+			} else if (mb === "Infinity" || mb === "-Infinity") {
+				x0 = su[2 * i].x;
+				y0 = ma * x0 + ca;
+			} else {
+				x0 = (cb - ca) / (ma - mb);
+				y0 = ma * x0 + ca;
 			}
-		} // end for
-		ttexte += "</g>";
-	} // end if
+
+			ttexte += "<circle cx=\"" + (scale * (ori.x + x0)) +
+				"\" cy=\"" + (scale * (ori.y - y0)) +
+				"\" r=\"4\" stroke-width=\"0\" fill=\"red\"/>";
+		}
+	} // end for
+	ttexte += "</g>";
+
 
 	return ttexte;
 }

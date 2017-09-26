@@ -62,13 +62,15 @@
 		</tr>
 		<tr>
 			<td class="menu" colspan="3">
-				squeleton: <input class="messageCheckbox" type="checkbox" value="1" name="">&nbsp;
+				<form id="myForm3"> squeleton:
+					<input class="messageCheckbox" type="checkbox" onclick="drawSqueleton()" value="1" name="Squeleton">
+				</form>
 				<form id="myForm2"> fillet: 
-					<input class="messageCheckbox" type="checkbox" onclick="drawFilletpts()" value="2" name="">&nbsp;
+					<input class="messageCheckbox" type="checkbox" onclick="drawFilletpts()" value="2" name="Fillet">
 				</form>
 				<form id="myForm1"> origin:
 					<input class="messageCheckbox" type="checkbox" onclick="drawOrigin(theObj)" value="3" name="Origin">
-				</form>&nbsp;
+				</form>
 				<button type="button" onclick="doDebug(theObj);">Debug</button>
 			</td>
 		</tr>
@@ -240,6 +242,7 @@
 			// draw shape (with rounded corner if specified)
 			for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
 				currview = theObj.Views[noview];
+				svg += "<g class=\"basicview\" id=\"view" + noview + "\" >";
 				for (noshape = 0; noshape <= currview.Shapes.length - 1; noshape += 1) {
 					svg += Shape(currview.Header.Name,
 						currview.Shapes[noshape].Points,
@@ -247,15 +250,14 @@
 						currview.Header.Origine,
 						currview.Shapes[noshape].Fill,
 						noview,
-						myConstructor,
 						theObj.Format);
 				} // for
+				svg += "</g>";
 			} // for
 
 			// Add containers: dimension, origin and lines
 			svg += "\n<g id=\"dimension\"></g>";
 			svg += "\n<g id=\"origin\"></g>";
-			svg += "\n<g id=\"lines\"></g>";
 			svg += "\n</svg>";
 
 			// Draw SVG in MyDoc window
@@ -264,8 +266,10 @@
 			// catch SVG in theSvgElement variable for further function
 			theSvgElement = myDoc.getElementsByTagName("svg")[0];
 
-			// draw Lines from theSvgElement
-			drawLine(theSvgElement, theObj);
+			// draw Lines from theSvgElement and view #
+			for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
+				drawLine(noview, theSvgElement, theObj);
+			}
 
 			// draw dimension from the SvgElement
 			for (nodim = 0; nodim <= theObj.Dimensions.length - 1; nodim += 1) {
@@ -275,8 +279,8 @@
 			// draw origin point for each view
 			drawOrigin(theObj);
 			
-
 			drawFilletpts();
+			drawSqueleton();
 
 			return svg;
 		}
@@ -322,7 +326,6 @@
 			var x = document.forms.myForm2;
 			if (x[0].checked === true) {
 				var nodes = theSvgElement.getElementsByClassName('ptsfillet');
-	
 				for (var i=0, len = nodes.length; i < len; i++) {
    					nodes[i].style.visibility = "visible";
 				}
@@ -335,6 +338,54 @@
 			}
 			return 0;
 		}
+
+		/**
+		 * draw point constructor for fillet
+		 */
+		function drawSqueleton() {
+			"use strict";
+			var i = 0,
+				len = 0,
+				nodes,
+				x;
+			
+			x = document.forms.myForm3;
+			
+			// Class:
+			// - squeleton
+			// - centerfillet
+			// - squeletontext
+			
+			if (x[0].checked === true) {
+				nodes = theSvgElement.getElementsByClassName('squeleton');
+				for (i=0, len = nodes.length; i < len; i++) {
+   					nodes[i].style.visibility = "visible";
+				}
+				nodes = theSvgElement.getElementsByClassName('centerfillet');
+				for (i=0, len = nodes.length; i < len; i++) {
+   					nodes[i].style.visibility = "visible";
+				}
+				nodes = theSvgElement.getElementsByClassName('squeletontext');
+				for (i=0, len = nodes.length; i < len; i++) {
+   					nodes[i].style.visibility = "visible";
+				}
+			} else if (x[0].checked === false) {
+				nodes = theSvgElement.getElementsByClassName('squeleton');
+				for (i=0, len = nodes.length; i < len; i++) {
+   					nodes[i].style.visibility = "hidden";
+				}
+				nodes = theSvgElement.getElementsByClassName('centerfillet');
+				for (i=0, len = nodes.length; i < len; i++) {
+   					nodes[i].style.visibility = "hidden";
+				}
+				nodes = theSvgElement.getElementsByClassName('squeletontext');
+				for (i=0, len = nodes.length; i < len; i++) {
+   					nodes[i].style.visibility = "hidden";
+				}
+			}
+			return 0;
+		}
+
 
 		/**
 		 * Load a JSON document from local disk

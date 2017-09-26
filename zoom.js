@@ -8,7 +8,9 @@
 function doDebug(myObj) {
     "use strict";
     
-    var myWindow,
+    var i = 0,
+    	noView = 0,
+    	myWindow,
         myDocDebug;
     
     // Open new window for debug
@@ -28,11 +30,17 @@ function doDebug(myObj) {
     if (typeof myObj === "undefined") {
         myDocDebug.getElementById("debug").innerHTML = "Drawing not loaded";
     } else {
-        
         myDocDebug.getElementById("debug").innerHTML += doDebugLine("The type is:", myObj.Header.Type, "OK");
         myDocDebug.getElementById("debug").innerHTML += doDebugLine("The name is:", myObj.Header.Name, "OK");
         myDocDebug.getElementById("debug").innerHTML += doDebugLine("The title is:", myObj.Header.Title, "OK");
-
+		
+		noView = myObj.Views.length;
+		myDocDebug.getElementById("debug").innerHTML += doDebugLine("The number of view is:", noView, "OK");
+		if (noView > 0) {
+			for (i = 0; i <= noView - 1; i += 1) {
+				myDocDebug.getElementById("debug").innerHTML += doDebugLine("The number of shape in view" + i + " is:", myObj.Views[i].Shapes.length, "OK");
+			}
+		}
     }
     
     return 0;
