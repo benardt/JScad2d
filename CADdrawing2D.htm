@@ -122,23 +122,10 @@
 
 			// Put all data from JSON editor to theObj
 			theObj = editor.get();
-			
-			// Check box
-			// return myConstructor = checked box no
-			var i,
-				myConstructor = null, // number of checked box
-				inputElements = document.getElementsByClassName('messageCheckbox');
-			for (i = 0; inputElements[i]; i += 1) {
-				if (inputElements[i].checked) {
-					myConstructor = Number(inputElements[i].value);
-					break;
-				} // if
-			} // for
-
 
 			// Check if PART or ASSY object
 			if (theObj.Header.Type === "part") {
-
+				// no active now. Waiting coding for assy
 			}
 
 			// -----------------------------------------------
@@ -167,7 +154,7 @@
 					y: 1000000
 				},
 				max: {
-					x: -100000,
+					x: -1000000,
 					y: -1000000
 				}
 			};
@@ -203,12 +190,12 @@
 				svg = "<svg height=\"400\" width=\"600\" viewBox=\"" +
 					viewBox +
 					"\"  xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
-			} // if
+			}
 			// End of initialize SVG with VIEW BOX -----------------------------------------
 
 
 			// Add basic information about SVG drawing
-			svg += "<title>" + 1 + "</title>";
+			svg += "<title>" + "My drawing" + "</title>";
 			svg += "<desc>A path that draws a triangle</desc>";
 
 			// Define marker (arrow) for dimension
@@ -238,23 +225,12 @@
 					svg += "</defs>";
 				} // if
 			} // for
-
-			// draw shape (with rounded corner if specified)
+			
+			// Create container for each view
 			for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
-				currview = theObj.Views[noview];
-				svg += "<g class=\"basicview\" id=\"view" + noview + "\" >";
-				for (noshape = 0; noshape <= currview.Shapes.length - 1; noshape += 1) {
-					svg += Shape(currview.Header.Name,
-						currview.Shapes[noshape].Points,
-						theObj.Header.Scale,
-						currview.Header.Origine,
-						currview.Shapes[noshape].Fill,
-						noview,
-						theObj.Format);
-				} // for
-				svg += "</g>";
-			} // for
-
+				svg += "<g class=\"basicview\" id=\"view" + noview + "\" ></g>";
+			}
+			
 			// Add containers: dimension, origin and lines
 			svg += "\n<g id=\"dimension\"></g>";
 			svg += "\n<g id=\"origin\"></g>";
@@ -265,6 +241,22 @@
 
 			// catch SVG in theSvgElement variable for further function
 			theSvgElement = myDoc.getElementsByTagName("svg")[0];
+
+			// draw shape (with fillet at corner if specified)
+			for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
+				currview = theObj.Views[noview];
+				for (noshape = 0; noshape <= currview.Shapes.length - 1; noshape += 1) {
+					Shape(currview.Header.Name,
+						currview.Shapes[noshape].Points,
+						theObj.Header.Scale,
+						currview.Header.Origine,
+						currview.Shapes[noshape].Fill,
+						noview,
+						theObj.Format,
+						theSvgElement);
+				}
+			}
+
 
 			// draw Lines from theSvgElement and view #
 			for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
@@ -278,7 +270,6 @@
 
 			// draw origin point for each view
 			drawOrigin(theObj);
-			
 			drawFilletpts();
 			drawSqueleton();
 
@@ -341,6 +332,8 @@
 
 		/**
 		 * draw point constructor for fillet
+		 * 
+		 * <p>pass from hidden to visible</p>
 		 */
 		function drawSqueleton() {
 			"use strict";

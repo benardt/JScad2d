@@ -9,6 +9,7 @@
 
 \*/
 
+var NSSVG = 'http://www.w3.org/2000/svg';
 
 // --------------------------------------------------
 // object descriptor: Point
@@ -330,6 +331,7 @@ function drawLine(noview, svgelem, myObject) {
 function Shape() {
 	"use strict";
 	var i,
+		mydattr = "",
 		myText = "",
 		ttexte, // variable texte à retourner
 		pts = arguments[1], // points du squelette de la forme pleine
@@ -338,6 +340,7 @@ function Shape() {
 		texture = arguments[4], // texture
 		noview = arguments[5], // view # for hatch pattern
 		format = arguments[6], // format
+		thesvgelem = arguments[7],
 
 		p = [], // number of previous point
 		s = [], // number of next point
@@ -355,6 +358,9 @@ function Shape() {
 		m,
 		n,
 		KAPPA = 0.5522847498;
+		
+	var myView = "view" + noview;
+	var mySvg = thesvgelem.getElementById(myView);
 
 	// find number for previous and next point
 	// p is number of previous point
@@ -427,10 +433,19 @@ function Shape() {
 	}
 
 	// shape with fillet
-	myText = "<g class=\"basicshape\" ><path d=\"M";
+	var gobj = [],
+		gname = ['basicshape', 'squeleton', 'ptsfillet', 'squeletontext', 'centerfillet'];
+	
+	for (i = 0; i <= gname.length - 1; i += 1) {
+		gobj.push(document.createElementNS(NSSVG, 'g'));
+		gobj[gobj.length - 1].setAttributeNS (null, 'class', gname[gobj.length - 1]);
+		mySvg.appendChild (gobj[gobj.length - 1]);
+	}
+
+	mydattr = "M";
 	for (i = 0; i <= pts.length - 1; i += 1) {
 		if (pts[i].r !== null) {
-			myText += (scale * (ori.x + pr[2 * i].x)) + "," +
+			mydattr += (scale * (ori.x + pr[2 * i].x)) + "," +
 				(scale * (ori.y - pr[2 * i].y)) + " C" +
 				(scale * (ori.x + pr[2 * i + 1].x)) + "," +
 				(scale * (ori.y - pr[2 * i + 1].y)) + " " +
@@ -439,64 +454,115 @@ function Shape() {
 				(scale * (ori.x + su[2 * i].x)) + "," +
 				(scale * (ori.y - su[2 * i].y)) + " L";
 		} else {
-			myText += (scale * (ori.x + pts[i].x)) + "," + (scale * (ori.y - pts[i].y)) + " L";
+			mydattr += (scale * (ori.x + pts[i].x)) + "," + (scale * (ori.y - pts[i].y)) + " L";
 		}
 	}
 	// remove the last " L" because they are no new point.
-	myText = myText.substring(0, myText.length - 2);
+	mydattr = mydattr.substring(0, mydattr.length - 2);
+	mydattr += "z";
+	myText += mydattr;
 
 	// texture de la forme
 	if (texture === "hatch") {
-		myText += "z\" fill=\"url(#diagonalHatch" + "View" + noview + ")\" stroke=\"black\" stroke-width=\"2\" /></g>";
+		var myFill = 'url(#diagonalHatch' + 'View' + noview + ')';
+		//myText += "\" fill=\"url(#diagonalHatch" + "View" + noview + ")\" stroke=\"black\" stroke-width=\"2\" /></g>";
 	} else {
-		myText += "z\" fill=\"white\" stroke=\"black\" stroke-width=\"2\" /></g>";
+		//myText += "\" fill=\"white\" stroke=\"black\" stroke-width=\"2\" /></g>";
+		myFill = 'white';
 	}
-	ttexte += myText;
-
-	// Print key points of fillet (squeleton)
-	// class allow to print or not with .style.visibility property
-	ttexte += "<g class=\"ptsfillet\" >";
-	for (i = 0; i <= pts.length - 1; i += 1) {
-		if (pts[i].r !== null) {
-			ttexte += "<circle cx=\"" + (scale * (ori.x + pr[2 * i].x)) + "\"" +
-				" cy=\"" + (scale * (ori.y - pr[2 * i].y)) + "\"" +
-				" r=\"6\" stroke=\"black\" stroke-width=\"0\" fill=\"yellow\"/>";
-			ttexte += "<circle cx=\"" + (scale * (ori.x + pr[2 * i + 1].x)) + "\"" +
-				" cy=\"" + (scale * (ori.y - pr[2 * i + 1].y)) + "\"" +
-				" r=\"6\" stroke=\"black\" stroke-width=\"0\" fill=\"green\"/>";
-			ttexte += "<circle cx=\"" + (scale * (ori.x + su[2 * i].x)) + "\"" +
-				" cy=\"" + (scale * (ori.y - su[2 * i].y)) + "\"" +
-				" r=\"6\" stroke=\"black\" stroke-width=\"0\" fill=\"yellow\"/>";
-			ttexte += "<circle cx=\"" + (scale * (ori.x + su[2 * i + 1].x)) + "\"" +
-				" cy=\"" + (scale * (ori.y - su[2 * i + 1].y)) + "\"" +
-				" r=\"6\" stroke=\"black\" stroke-width=\"0\" fill=\"green\"/>";
-		}
-	}
-	ttexte += "</g>";
-
-	// Print key points of shape (squeleton)
-
-	ttexte += "<g class=\"squeletontext\" >";
-	// Affiche les numéros de chaque point
-	for (i = 0; i <= pts.length - 1; i += 1) {
-		ttexte += "<text x=\"" + (scale * (ori.x + pts[i].x)) + "\"" +
-			" y=\"" + (scale * (ori.y - pts[i].y)) + "\"" +
-			" font-size=\"" + format.font_size + "\" fill=\"red\">" + i + "</text>";
-	}
-	ttexte += "</g>";
-
-
+	
+	var path = document.createElementNS(NSSVG, 'path');
+	path.setAttributeNS (null, 'd', mydattr);
+	path.setAttributeNS (null, 'fill', myFill);
+	path.setAttributeNS (null, 'stroke', 'black');
+	path.setAttributeNS (null, 'stroke-width', 2);
+	gobj[0].appendChild (path);
+	
 	// print squeleton in red
 
 	// courbe d'origine sans les fillet pour le debug
-	ttexte += "<g class=\"squeleton\"><path d=\"M";
+	//ttexte += "<g class=\"squeleton\"><path d=\"M";
+	mydattr = "M";
 	for (i = 0; i <= pts.length - 1; i += 1) {
-		ttexte += " " + (scale * (ori.x + pts[i].x)) + " " + (scale * (ori.y - pts[i].y)) + " L";
+		mydattr += " " + (scale * (ori.x + pts[i].x)) + " " + (scale * (ori.y - pts[i].y)) + " L";
 	}
-	ttexte = ttexte.substring(0, ttexte.length - 2);
-	ttexte += "z\" fill=\"white\" fill-opacity=\"0.25\" stroke=\"red\" stroke-width=\"1\" /></g>";
+	mydattr = mydattr.substring(0, mydattr.length - 2);
+	mydattr += "z";
+	
+	var path1 = document.createElementNS(NSSVG, 'path');
+	path1.setAttributeNS (null, 'd', mydattr);
+	path1.setAttributeNS (null, 'fill', 'white');
+	path1.setAttributeNS (null, 'fill-opacity', 0.25);
+	path1.setAttributeNS (null, 'stroke', 'red');
+	path1.setAttributeNS (null, 'stroke-width', 1);
+	gobj[1].appendChild (path1);
+	
+	// Print key points of shape (squeleton) class = squeletontext
+	var texte = [];
+	var len = 0;
+	// Affiche les numéros de chaque point
+	for (i = 0; i <= pts.length - 1; i += 1) {
+		texte.push(document.createElementNS(NSSVG, 'text'));
+		len = texte.length - 1;
+		texte[len].setAttributeNS (null, 'x', scale * (ori.x + pts[i].x));
+		texte[len].setAttributeNS (null, 'y', scale * (ori.y - pts[i].y));
+		texte[len].setAttributeNS (null, 'fill', 'red');
+		texte[len].setAttributeNS (null, 'font-size', format.font_size);
+		texte[len].innerHTML = i;
+		gobj[3].appendChild (texte[len]);
+	}
+	
 
 
+
+	// Print key points of fillet (squeleton) class=ptsfillet
+	// class allow to print or not with .style.visibility property
+	var cercle = [];
+	len = 0;
+
+	for (i = 0; i <= pts.length - 1; i += 1) {
+		if (pts[i].r !== null) {
+			cercle.push(document.createElementNS(NSSVG, 'circle'));
+			len = cercle.length - 1;
+			cercle[len].setAttributeNS (null, 'cx', scale * (ori.x + pr[2 * i].x));
+			cercle[len].setAttributeNS (null, 'cy', scale * (ori.y - pr[2 * i].y));
+			cercle[len].setAttributeNS (null, 'r', 3);
+			cercle[len].setAttributeNS (null, 'stroke-width', 0);
+			cercle[len].setAttributeNS (null, 'fill', 'yellow');
+			gobj[2].appendChild (cercle[len]);
+			
+			cercle.push(document.createElementNS(NSSVG, 'circle'));
+			len = cercle.length - 1;
+			cercle[len].setAttributeNS (null, 'cx', scale * (ori.x + pr[2 * i + 1].x));
+			cercle[len].setAttributeNS (null, 'cy', scale * (ori.y - pr[2 * i + 1].y));
+			cercle[len].setAttributeNS (null, 'r', 3);
+			cercle[len].setAttributeNS (null, 'stroke-width', 0);
+			cercle[len].setAttributeNS (null, 'fill', 'green');
+			gobj[2].appendChild (cercle[len]);
+			
+			cercle.push(document.createElementNS(NSSVG, 'circle'));
+			len = cercle.length - 1;
+			cercle[len].setAttributeNS (null, 'cx', scale * (ori.x + su[2 * i].x));
+			cercle[len].setAttributeNS (null, 'cy', scale * (ori.y - su[2 * i].y));
+			cercle[len].setAttributeNS (null, 'r', 3);
+			cercle[len].setAttributeNS (null, 'stroke-width', 0);
+			cercle[len].setAttributeNS (null, 'fill', 'yellow');
+			gobj[2].appendChild (cercle[len]);
+			
+			cercle.push(document.createElementNS(NSSVG, 'circle'));
+			len = cercle.length - 1;
+			cercle[len].setAttributeNS (null, 'cx', scale * (ori.x + su[2 * i + 1].x));
+			cercle[len].setAttributeNS (null, 'cy', scale * (ori.y - su[2 * i + 1].y));
+			cercle[len].setAttributeNS (null, 'r', 3);
+			cercle[len].setAttributeNS (null, 'stroke-width', 0);
+			cercle[len].setAttributeNS (null, 'fill', 'green');
+			gobj[2].appendChild (cercle[len]);
+			
+		}
+	}
+
+// TODO à debuger
+/*
 	// Print center of fillet (in red)
 
 	var ma, ca, mb, cb,
@@ -558,9 +624,9 @@ function Shape() {
 		}
 	} // end for
 	ttexte += "</g>";
+*/
 
-
-	return ttexte;
+	return 0;
 }
 
 
