@@ -4,7 +4,7 @@
         
        
         Author: Thierry Bénard
-        Date: 25 Sep 2017
+        Date: 29 Sep 2017
 
 
 \*/
@@ -333,7 +333,6 @@ function Shape() {
 	var i,
 		mydattr = "",
 		myText = "",
-		ttexte, // variable texte à retourner
 		pts = arguments[1], // points du squelette de la forme pleine
 		scale = arguments[2], // échelle de l'affichage
 		ori = arguments[3], // origine du dessin
@@ -561,70 +560,65 @@ function Shape() {
 		}
 	}
 
-// TODO à debuger
-/*
+
 	// Print center of fillet (in red)
 
-	var ma, ca, mb, cb,
-		x0, x1, y0, y1;
-	ttexte += "<g class=\"centerfillet\" style=\"visibility:visible;\">";
-	// visibility:hidden or visibility:visible
+	var ca, cb,
+		x0, x1, y0, y1, x2, y2, x3, y3, x4, y4;
+		
+	// x0 and y0 are temporary variable
+	// L1 (x1, y1) and (x2, y2)
+	// L2 (x3, y3) and (x4, y4)
+	// Algorithm for intersection is here:
+	// https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
+	// 'Given two points on each line'
+
 	for (i = 0; i <= pts.length - 1; i += 1) {
 		if (pts[i].r !== null) {
+			
 			// rotation du point de base autour du point de départ du congé de 90°
 			// 1. changement de repère
-			x1 = pts[i].x - pr[2 * i].x;
-			y1 = pts[i].y - pr[2 * i].y;
+			x0 = pts[i].x - pr[2 * i].x;
+			y0 = pts[i].y - pr[2 * i].y;
 			// 2. rotation de 90°
-			x0 = -y1;
-			y0 = x1;
+			x2 = -y0;
+			y2 = x0;
 			// 3. changement de repère inverse
-			x0 = x0 + pr[2 * i].x;
-			y0 = y0 + pr[2 * i].y;
+			x2 = x2 + pr[2 * i].x;
+			y2 = y2 + pr[2 * i].y;
+
+			// rotation du point de base autour du point de fin du congé de 90°
+			// 1. changement de repèe
+			x0 = pts[i].x - su[2 * i].x;
+			y0 = pts[i].y - su[2 * i].y;
+			// 2. rotation de 90°
+			x3 = -y0;
+			y3 = x0;
+			// 3. changement de repère inverse
+			x3 = x3 + su[2 * i].x;
+			y3 = y3 + su[2 * i].y;
 
 			x1 = pr[2 * i].x;
 			y1 = pr[2 * i].y;
 
-			// Calcul des paramètres de la droite
-			ma = (y1 - y0) / (x1 - x0);
-			ca = (x1 * y0 - x0 * y1) / (x1 - x0);
-
-			// rotation du point de base autour du point de départ du congé de 90°
-			// 1. changement de repèe
-			x1 = pts[i].x - su[2 * i].x;
-			y1 = pts[i].y - su[2 * i].y;
-			// 2. rotation de 90°
-			x0 = -y1;
-			y0 = x1;
-			// 3. changement de repère inverse
-			x0 = x0 + su[2 * i].x;
-			y0 = y0 + su[2 * i].y;
-
-			x1 = su[2 * i].x;
-			y1 = su[2 * i].y;
-			// Calcul des paramètres de la droite
-			mb = (y1 - y0) / (x1 - x0);
-			cb = (x1 * y0 - x0 * y1) / (x1 - x0);
-
-			// prise en compte des droites verticales m = infini ou -infini
-			if (ma === "Infinity" || ma === "-Infinity") {
-				x0 = pr[2 * i].x;
-				y0 = mb * x0 + cb;
-			} else if (mb === "Infinity" || mb === "-Infinity") {
-				x0 = su[2 * i].x;
-				y0 = ma * x0 + ca;
-			} else {
-				x0 = (cb - ca) / (ma - mb);
-				y0 = ma * x0 + ca;
-			}
-
-			ttexte += "<circle cx=\"" + (scale * (ori.x + x0)) +
-				"\" cy=\"" + (scale * (ori.y - y0)) +
-				"\" r=\"4\" stroke-width=\"0\" fill=\"red\"/>";
+			x4 = su[2 * i].x;
+			y4 = su[2 * i].y;
+			
+			var coeff = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+			ca = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / coeff;
+			cb = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / coeff;
+			
+			cercle.push(document.createElementNS(NSSVG, 'circle'));
+			len = cercle.length - 1;
+			cercle[len].setAttributeNS (null, 'cx', scale * (ori.x + ca));
+			cercle[len].setAttributeNS (null, 'cy', scale * (ori.y - cb));
+			cercle[len].setAttributeNS (null, 'r', 3);
+			cercle[len].setAttributeNS (null, 'stroke-width', 0);
+			cercle[len].setAttributeNS (null, 'fill', 'red');
+			gobj[4].appendChild (cercle[len]);
 		}
 	} // end for
-	ttexte += "</g>";
-*/
+
 
 	return 0;
 }
