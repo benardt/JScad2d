@@ -4,7 +4,7 @@
         
        
         Author: Thierry Bénard
-        Date: 29 Sep 2017
+        Date: 30 Sep 2017
 
 
 \*/
@@ -332,7 +332,6 @@ function Shape() {
 	"use strict";
 	var i,
 		mydattr = "",
-		myText = "",
 		pts = arguments[1], // points du squelette de la forme pleine
 		scale = arguments[2], // échelle de l'affichage
 		ori = arguments[3], // origine du dessin
@@ -360,6 +359,15 @@ function Shape() {
 		
 	var myView = "view" + noview;
 	var mySvg = thesvgelem.getElementById(myView);
+	
+	var gobj = [],
+		gname = ['basicshape', 'squeleton', 'ptsfillet', 'squeletontext', 'centerfillet'];
+	
+	for (i = 0; i <= gname.length - 1; i += 1) {
+		gobj.push(document.createElementNS(NSSVG, 'g'));
+		gobj[gobj.length - 1].setAttributeNS (null, 'class', gname[gobj.length - 1]);
+		mySvg.appendChild (gobj[gobj.length - 1]);
+	}
 
 	// find number for previous and next point
 	// p is number of previous point
@@ -397,6 +405,7 @@ function Shape() {
 	// the point R divides the line-segment internally in a given ratio m : n
 
 	// For fillet (circle) ratio is find from kappa parameter
+	// source: http://www.whizkidtech.redprince.net/bezier/circle/
 
 	for (i = 0; i <= pts.length - 1; i += 1) {
 		if (pts[i].r !== null) {
@@ -431,15 +440,14 @@ function Shape() {
 		}
 	}
 
-	// shape with fillet
-	var gobj = [],
-		gname = ['basicshape', 'squeleton', 'ptsfillet', 'squeletontext', 'centerfillet'];
-	
-	for (i = 0; i <= gname.length - 1; i += 1) {
-		gobj.push(document.createElementNS(NSSVG, 'g'));
-		gobj[gobj.length - 1].setAttributeNS (null, 'class', gname[gobj.length - 1]);
-		mySvg.appendChild (gobj[gobj.length - 1]);
-	}
+	// path
+	// Moveto: M x,y where x and y are absolute coordinates, horizontal and vertical respectively
+	// Lineto: "Lx,y" where x and y are absolute coordinates
+	// Curveto: Cubic Bezier curve "C c1x,c1y c2x,c2y x,y" where c1x,c1y, and c2x,c2y are the
+	//     absolute coordinates of the control points for the initial point and end point, respectively.
+	//     x and y are the absolute coordinates of the end point.
+
+	// Main shape
 
 	mydattr = "M";
 	for (i = 0; i <= pts.length - 1; i += 1) {
@@ -459,14 +467,11 @@ function Shape() {
 	// remove the last " L" because they are no new point.
 	mydattr = mydattr.substring(0, mydattr.length - 2);
 	mydattr += "z";
-	myText += mydattr;
 
 	// texture de la forme
 	if (texture === "hatch") {
 		var myFill = 'url(#diagonalHatch' + 'View' + noview + ')';
-		//myText += "\" fill=\"url(#diagonalHatch" + "View" + noview + ")\" stroke=\"black\" stroke-width=\"2\" /></g>";
 	} else {
-		//myText += "\" fill=\"white\" stroke=\"black\" stroke-width=\"2\" /></g>";
 		myFill = 'white';
 	}
 	
@@ -480,7 +485,6 @@ function Shape() {
 	// print squeleton in red
 
 	// courbe d'origine sans les fillet pour le debug
-	//ttexte += "<g class=\"squeleton\"><path d=\"M";
 	mydattr = "M";
 	for (i = 0; i <= pts.length - 1; i += 1) {
 		mydattr += " " + (scale * (ori.x + pts[i].x)) + " " + (scale * (ori.y - pts[i].y)) + " L";
