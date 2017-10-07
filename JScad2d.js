@@ -9,13 +9,15 @@
 
 \*/
 
+"use strict";
+
 var NSSVG = 'http://www.w3.org/2000/svg';
 
 // --------------------------------------------------
 // object descriptor: Point
 // --------------------------------------------------
 function Point(x, y, r) {
-	"use strict";
+
 	this.x = x;
 	this.y = y;
 	this.r = r;
@@ -28,7 +30,6 @@ function Point(x, y, r) {
 // Replace a string formula with value of formula result
 //---------------------------------------------------------------------------------------
 function mathEval(exp) {
-	"use strict";
 	var reg = /(?:[a-z$_][a-z0-9$_]*)|(?:[;={}\[\]"'!&<>^\\?:])/ig,
 		valid = true,
 		myVar;
@@ -56,13 +57,182 @@ function mathEval(exp) {
 	}
 }
 
+
+//-------------------------------------------------------------------
+// Main function
+//-------------------------------------------------------------------
+function doUpdate() {
+	"use strict";
+
+	// Put all data from JSON editor to theObj
+	theObj = editor.get();
+
+	// Check if PART or ASSY object
+	if (theObj.Header.Type === "part") {
+		// no active now. Waiting coding for assy
+	}
+
+	// -----------------------------------------------
+	// Draw the shaoe
+	// -------------------------------------------------
+	var noview = 0,
+		noshape = 0,
+		nopt = 0,
+		strTmp = "",
+		svg = "",
+		nodim = 0,
+		currview = {},
+		limit = {};
+
+
+	// replace parameters by value and evaluate formula
+	theObj = doDeparam(theObj);
+	// put all coordinates in cartesian
+	theObj = doCoordonate(theObj);
+
+	// Initialize SVG with VIEW BOX -----------------------------------------
+	// Here place function to find min x & min y & max x & max y to automatize the viewBox behavior
+	limit = {
+		min: {
+			x: 1000000,
+			y: 1000000
+		},
+		max: {
+			x: -1000000,
+			y: -1000000
+		}
+	};
+	for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
+		currview = theObj.Views[noview];
+		for (noshape = 0; noshape <= currview.Shapes.length - 1; noshape += 1) {
+			for (nopt = 0; nopt <= currview.Shapes[noshape].Points.length - 1; nopt += 1) {
+				limit.min.x = Math.min(limit.min.x,
+					currview.Header.Origine.x + currview.Shapes[noshape].Points[nopt].x);
+				limit.min.y = Math.min(limit.min.y,
+					currview.Header.Origine.y - currview.Shapes[noshape].Points[nopt].y);
+				limit.max.x = Math.max(limit.max.x,
+					currview.Header.Origine.x + currview.Shapes[noshape].Points[nopt].x);
+				limit.max.y = Math.max(limit.max.y,
+					currview.Header.Origine.y - currview.Shapes[noshape].Points[nopt].y);
+			} // for
+		} // for
+	} // for
+
+	if (typeof theSvgElement === "undefined") {
+		// Zoom
+		strTmp = (theObj.Header.Scale * limit.min.x) + " " +
+			(theObj.Header.Scale * limit.min.y) + " " +
+			(theObj.Header.Scale * (limit.max.x - limit.min.x)) + " " +
+			(theObj.Header.Scale * (limit.max.y - limit.min.y));
+		svg = "<svg height=\"400\" width=\"600\" viewBox=\"" +
+			strTmp +
+			"\"  xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
+	} else {
+		// Grab the object representing the SVG element's viewBox attribute.
+		var viewBox = theSvgElement.getAttribute('viewBox');
+
+		svg = "<svg height=\"400\" width=\"600\" viewBox=\"" +
+			viewBox +
+			"\"  xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
+	}
+	// End of initialize SVG with VIEW BOX -----------------------------------------
+
+
+	// Add basic information about SVG drawing
+	svg += "<title>" + "My drawing" + "</title>";
+	svg += "<desc>A path that draws a triangle</desc>";
+
+
+	// Patern for hatch
+	for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
+		if (theObj.Views[noview].Header.Hatch.Distance !== null) {
+			svg += "<defs>";
+			svg += "<pattern id=\"diagonalHatch" + "View" + noview + "\" " +
+				"patternUnits=\"userSpaceOnUse\" " +
+				"width=\"" + theObj.Views[noview].Header.Hatch.Distance + "\" " +
+				"height=\"" + theObj.Views[noview].Header.Hatch.Distance + "\" " +
+				"patternTransform=\"rotate(" + theObj.Views[noview].Header.Hatch.Angle + " 2 2)\">";
+			svg += "<path d=\"M -1,2 l 18,0\" " +
+				"stroke=\"" + theObj.Views[noview].Header.Hatch.Color + "\" " +
+				"stroke-width=\"" + theObj.Format.Hatch_thick + "\"/>";
+			svg += "</pattern>";
+			svg += "</defs>";
+		} // if
+	} // for
+
+	// Create container for each view
+	for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
+		svg += "<g class=\"basicview\" id=\"view" + noview + "\" ></g>";
+	}
+
+
+
+	// Add containers: dimension, origin and lines
+	svg += "\n<g id=\"dimension\"></g>";
+	svg += "\n<g id=\"origin\"></g>";
+
+	// Define marker (arrow) for dimension
+	svg += "<defs>";
+	svg += "<marker id=\"markerArrowStart\" markerWidth=\"13\" markerHeight=\"13\" refX=\"2\" refY=\"5\"  orient=\"auto\">";
+	svg += "<path d=\"M2,5 L10,9 L10,2 L2,5\" fill=\"" + theObj.Format.Dimensions_color + "\" />";
+	svg += "</marker>";
+	svg += "<marker id=\"markerArrowEnd\" markerWidth=\"13\" markerHeight=\"13\" refX=\"10\" refY=\"5\"  orient=\"auto\">";
+	svg += "<path d=\"M2,2 L2,9 L10,5 L2,2\" fill=\"" + theObj.Format.Dimensions_color + "\" />";
+	svg += "</marker>";
+	svg += "</defs>";
+
+	svg += "\n</svg>";
+
+	// Draw SVG in MyDoc window
+	myDoc.getElementById("drawing1").innerHTML = svg;
+
+	// catch SVG in theSvgElement variable for further function
+	theSvgElement = myDoc.getElementsByTagName("svg")[0];
+
+
+	// draw shape (with fillet at corner if specified)
+	for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
+		currview = theObj.Views[noview];
+		for (noshape = 0; noshape <= currview.Shapes.length - 1; noshape += 1) {
+			Shape(currview.Header.Name,
+				currview.Shapes[noshape].Points,
+				theObj.Header.Scale,
+				currview.Header.Origine,
+				currview.Shapes[noshape].Fill,
+				noview,
+				theObj.Format,
+				theSvgElement);
+		}
+	}
+
+
+	// draw Lines from theSvgElement and view #
+	for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
+		drawLine(noview, theSvgElement, theObj);
+	}
+
+	// draw dimension from the SvgElement
+	for (nodim = 0; nodim <= theObj.Dimensions.length - 1; nodim += 1) {
+		svg += drawDimension(theSvgElement, theObj, theObj.Dimensions[nodim]);
+	} // for
+
+	// draw origin point for each view
+	drawOrigin(theObj, 'blue');
+	drawFilletpts();
+	drawSqueleton();
+
+	return svg;
+}
+
+
+
+
 // ------------------------------------------------
 // function: do de-parametrization
 // replace all parameters by the right number value
 // input : objet = the Object json file
 // ------------------------------------------------
 function doDeparam(objet) {
-	"use strict";
 
 	var i,
 		param = [],
@@ -197,7 +367,6 @@ function doDeparam(objet) {
  * 
  */
 function doCoordonate(objet) {
-	"use strict";
 
 	var noview,
 		currshapes,
@@ -237,7 +406,6 @@ function doCoordonate(objet) {
 // Return the length of string in pixels
 // --------------------------------------------------
 function getWidthString(the_text_that_you_want_to_measure, fontsize, fontname) {
-	"use strict";
 
 	var c,
 		ctx,
@@ -263,7 +431,6 @@ function getWidthString(the_text_that_you_want_to_measure, fontsize, fontname) {
  * @param {object} objet
  */
 function drawLine(noview, svgelem, myObject) {
-	"use strict";
 
 	var noline = 0,
 		myViewid,
@@ -356,17 +523,17 @@ function Shape() {
 		m,
 		n,
 		KAPPA = 0.5522847498;
-		
+
 	var myView = "view" + noview;
 	var mySvg = thesvgelem.getElementById(myView);
-	
+
 	var gobj = [],
 		gname = ['basicshape', 'squeleton', 'ptsfillet', 'squeletontext', 'centerfillet'];
-	
+
 	for (i = 0; i <= gname.length - 1; i += 1) {
 		gobj.push(document.createElementNS(NSSVG, 'g'));
-		gobj[gobj.length - 1].setAttributeNS (null, 'class', gname[gobj.length - 1]);
-		mySvg.appendChild (gobj[gobj.length - 1]);
+		gobj[gobj.length - 1].setAttributeNS(null, 'class', gname[gobj.length - 1]);
+		mySvg.appendChild(gobj[gobj.length - 1]);
 	}
 
 	// find number for previous and next point
@@ -474,14 +641,14 @@ function Shape() {
 	} else {
 		myFill = 'white';
 	}
-	
+
 	var path = document.createElementNS(NSSVG, 'path');
-	path.setAttributeNS (null, 'd', mydattr);
-	path.setAttributeNS (null, 'fill', myFill);
-	path.setAttributeNS (null, 'stroke', 'black');
-	path.setAttributeNS (null, 'stroke-width', 2);
-	gobj[0].appendChild (path);
-	
+	path.setAttributeNS(null, 'd', mydattr);
+	path.setAttributeNS(null, 'fill', myFill);
+	path.setAttributeNS(null, 'stroke', 'black');
+	path.setAttributeNS(null, 'stroke-width', 2);
+	gobj[0].appendChild(path);
+
 	// print squeleton in red
 
 	// courbe d'origine sans les fillet pour le debug
@@ -491,15 +658,15 @@ function Shape() {
 	}
 	mydattr = mydattr.substring(0, mydattr.length - 2);
 	mydattr += "z";
-	
+
 	var path1 = document.createElementNS(NSSVG, 'path');
-	path1.setAttributeNS (null, 'd', mydattr);
-	path1.setAttributeNS (null, 'fill', 'white');
-	path1.setAttributeNS (null, 'fill-opacity', 0.25);
-	path1.setAttributeNS (null, 'stroke', 'red');
-	path1.setAttributeNS (null, 'stroke-width', 1);
-	gobj[1].appendChild (path1);
-	
+	path1.setAttributeNS(null, 'd', mydattr);
+	path1.setAttributeNS(null, 'fill', 'white');
+	path1.setAttributeNS(null, 'fill-opacity', 0.25);
+	path1.setAttributeNS(null, 'stroke', 'red');
+	path1.setAttributeNS(null, 'stroke-width', 1);
+	gobj[1].appendChild(path1);
+
 	// Print key points of shape (squeleton) class = squeletontext
 	var texte = [];
 	var len = 0;
@@ -507,14 +674,14 @@ function Shape() {
 	for (i = 0; i <= pts.length - 1; i += 1) {
 		texte.push(document.createElementNS(NSSVG, 'text'));
 		len = texte.length - 1;
-		texte[len].setAttributeNS (null, 'x', scale * (ori.x + pts[i].x));
-		texte[len].setAttributeNS (null, 'y', scale * (ori.y - pts[i].y));
-		texte[len].setAttributeNS (null, 'fill', 'red');
-		texte[len].setAttributeNS (null, 'font-size', format.font_size);
+		texte[len].setAttributeNS(null, 'x', scale * (ori.x + pts[i].x));
+		texte[len].setAttributeNS(null, 'y', scale * (ori.y - pts[i].y));
+		texte[len].setAttributeNS(null, 'fill', 'red');
+		texte[len].setAttributeNS(null, 'font-size', format.font_size);
 		texte[len].innerHTML = i;
-		gobj[3].appendChild (texte[len]);
+		gobj[3].appendChild(texte[len]);
 	}
-	
+
 
 
 
@@ -527,40 +694,40 @@ function Shape() {
 		if (pts[i].r !== null) {
 			cercle.push(document.createElementNS(NSSVG, 'circle'));
 			len = cercle.length - 1;
-			cercle[len].setAttributeNS (null, 'cx', scale * (ori.x + pr[2 * i].x));
-			cercle[len].setAttributeNS (null, 'cy', scale * (ori.y - pr[2 * i].y));
-			cercle[len].setAttributeNS (null, 'r', 3);
-			cercle[len].setAttributeNS (null, 'stroke-width', 0);
-			cercle[len].setAttributeNS (null, 'fill', 'yellow');
-			gobj[2].appendChild (cercle[len]);
-			
+			cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + pr[2 * i].x));
+			cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - pr[2 * i].y));
+			cercle[len].setAttributeNS(null, 'r', 3);
+			cercle[len].setAttributeNS(null, 'stroke-width', 0);
+			cercle[len].setAttributeNS(null, 'fill', 'yellow');
+			gobj[2].appendChild(cercle[len]);
+
 			cercle.push(document.createElementNS(NSSVG, 'circle'));
 			len = cercle.length - 1;
-			cercle[len].setAttributeNS (null, 'cx', scale * (ori.x + pr[2 * i + 1].x));
-			cercle[len].setAttributeNS (null, 'cy', scale * (ori.y - pr[2 * i + 1].y));
-			cercle[len].setAttributeNS (null, 'r', 3);
-			cercle[len].setAttributeNS (null, 'stroke-width', 0);
-			cercle[len].setAttributeNS (null, 'fill', 'green');
-			gobj[2].appendChild (cercle[len]);
-			
+			cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + pr[2 * i + 1].x));
+			cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - pr[2 * i + 1].y));
+			cercle[len].setAttributeNS(null, 'r', 3);
+			cercle[len].setAttributeNS(null, 'stroke-width', 0);
+			cercle[len].setAttributeNS(null, 'fill', 'green');
+			gobj[2].appendChild(cercle[len]);
+
 			cercle.push(document.createElementNS(NSSVG, 'circle'));
 			len = cercle.length - 1;
-			cercle[len].setAttributeNS (null, 'cx', scale * (ori.x + su[2 * i].x));
-			cercle[len].setAttributeNS (null, 'cy', scale * (ori.y - su[2 * i].y));
-			cercle[len].setAttributeNS (null, 'r', 3);
-			cercle[len].setAttributeNS (null, 'stroke-width', 0);
-			cercle[len].setAttributeNS (null, 'fill', 'yellow');
-			gobj[2].appendChild (cercle[len]);
-			
+			cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + su[2 * i].x));
+			cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - su[2 * i].y));
+			cercle[len].setAttributeNS(null, 'r', 3);
+			cercle[len].setAttributeNS(null, 'stroke-width', 0);
+			cercle[len].setAttributeNS(null, 'fill', 'yellow');
+			gobj[2].appendChild(cercle[len]);
+
 			cercle.push(document.createElementNS(NSSVG, 'circle'));
 			len = cercle.length - 1;
-			cercle[len].setAttributeNS (null, 'cx', scale * (ori.x + su[2 * i + 1].x));
-			cercle[len].setAttributeNS (null, 'cy', scale * (ori.y - su[2 * i + 1].y));
-			cercle[len].setAttributeNS (null, 'r', 3);
-			cercle[len].setAttributeNS (null, 'stroke-width', 0);
-			cercle[len].setAttributeNS (null, 'fill', 'green');
-			gobj[2].appendChild (cercle[len]);
-			
+			cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + su[2 * i + 1].x));
+			cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - su[2 * i + 1].y));
+			cercle[len].setAttributeNS(null, 'r', 3);
+			cercle[len].setAttributeNS(null, 'stroke-width', 0);
+			cercle[len].setAttributeNS(null, 'fill', 'green');
+			gobj[2].appendChild(cercle[len]);
+
 		}
 	}
 
@@ -569,7 +736,7 @@ function Shape() {
 
 	var ca, cb,
 		x0, x1, y0, y1, x2, y2, x3, y3, x4, y4;
-		
+
 	// x0 and y0 are temporary variable
 	// L1 (x1, y1) and (x2, y2)
 	// L2 (x3, y3) and (x4, y4)
@@ -579,7 +746,7 @@ function Shape() {
 
 	for (i = 0; i <= pts.length - 1; i += 1) {
 		if (pts[i].r !== null) {
-			
+
 			// rotation du point de base autour du point de départ du congé de 90°
 			// 1. changement de repère
 			x0 = pts[i].x - pr[2 * i].x;
@@ -607,19 +774,19 @@ function Shape() {
 
 			x4 = su[2 * i].x;
 			y4 = su[2 * i].y;
-			
+
 			var coeff = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
 			ca = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / coeff;
 			cb = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / coeff;
-			
+
 			cercle.push(document.createElementNS(NSSVG, 'circle'));
 			len = cercle.length - 1;
-			cercle[len].setAttributeNS (null, 'cx', scale * (ori.x + ca));
-			cercle[len].setAttributeNS (null, 'cy', scale * (ori.y - cb));
-			cercle[len].setAttributeNS (null, 'r', 3);
-			cercle[len].setAttributeNS (null, 'stroke-width', 0);
-			cercle[len].setAttributeNS (null, 'fill', 'red');
-			gobj[4].appendChild (cercle[len]);
+			cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + ca));
+			cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - cb));
+			cercle[len].setAttributeNS(null, 'r', 3);
+			cercle[len].setAttributeNS(null, 'stroke-width', 0);
+			cercle[len].setAttributeNS(null, 'fill', 'red');
+			gobj[4].appendChild(cercle[len]);
 		}
 	} // end for
 
@@ -807,5 +974,116 @@ function drawDimension(theSvgElement, objet, dim) {
 	} // else if
 
 
+	return 0;
+}
+
+
+/**
+ * draw point constructor for fillet
+ */
+function drawFilletpts() {
+	"use strict";
+	var x = document.forms.myForm2;
+	if (x[0].checked === true) {
+		var nodes = theSvgElement.getElementsByClassName('ptsfillet');
+		for (var i = 0, len = nodes.length; i < len; i++) {
+			nodes[i].style.visibility = "visible";
+		}
+
+	} else if (x[0].checked === false) {
+		nodes = theSvgElement.getElementsByClassName('ptsfillet');
+		for (i = 0, len = nodes.length; i < len; i++) {
+			nodes[i].style.visibility = "hidden";
+		}
+	}
+	return 0;
+}
+
+// ------------------------------------------------
+// function: Draw origin
+// draw a filled circle at each view origin
+// input : objet = the Object json file
+// ------------------------------------------------
+
+/**
+ * Draw origin point in color
+ * 
+ * @param {string} color
+ */
+function drawOrigin(objet, mycolor) {
+	"use strict";
+	var x = document.forms.myForm1,
+		noview,
+		currview = objet.Views;
+
+	if (x[0].checked === true) {
+		// draw origin for each View
+		for (noview = 0; noview <= currview.length - 1; noview += 1) {
+			var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+			circle.setAttribute("cx", objet.Header.Scale * currview[noview].Header.Origine.x);
+			circle.setAttribute("cy", objet.Header.Scale * currview[noview].Header.Origine.y);
+			circle.setAttribute("r", 4);
+			circle.setAttribute("fill", mycolor);
+			circle.setAttribute("stroke-width", 0);
+			theSvgElement.getElementById("origin").appendChild(circle);
+		} // for
+	} else if (x[0].checked === false) {
+		var element = theSvgElement.getElementById("origin");
+		while (element.firstChild) {
+			element.removeChild(element.firstChild);
+		} // while
+	} // if
+
+	return 0;
+} // drawOrigin
+
+
+
+/**
+ * draw point constructor for fillet
+ * 
+ * <p>pass from hidden to visible</p>
+ */
+function drawSqueleton() {
+	"use strict";
+	var i = 0,
+		len = 0,
+		nodes,
+		x;
+
+	x = document.forms.myForm3;
+
+	// Class:
+	// - squeleton
+	// - centerfillet
+	// - squeletontext
+
+	if (x[0].checked === true) {
+		nodes = theSvgElement.getElementsByClassName('squeleton');
+		for (i = 0, len = nodes.length; i < len; i++) {
+			nodes[i].style.visibility = "visible";
+		}
+		nodes = theSvgElement.getElementsByClassName('centerfillet');
+		for (i = 0, len = nodes.length; i < len; i++) {
+			nodes[i].style.visibility = "visible";
+		}
+		nodes = theSvgElement.getElementsByClassName('squeletontext');
+		for (i = 0, len = nodes.length; i < len; i++) {
+			nodes[i].style.visibility = "visible";
+		}
+	} else if (x[0].checked === false) {
+		nodes = theSvgElement.getElementsByClassName('squeleton');
+		for (i = 0, len = nodes.length; i < len; i++) {
+			nodes[i].style.visibility = "hidden";
+		}
+		nodes = theSvgElement.getElementsByClassName('centerfillet');
+		for (i = 0, len = nodes.length; i < len; i++) {
+			nodes[i].style.visibility = "hidden";
+		}
+		nodes = theSvgElement.getElementsByClassName('squeletontext');
+		for (i = 0, len = nodes.length; i < len; i++) {
+			nodes[i].style.visibility = "hidden";
+		}
+	}
 	return 0;
 }
