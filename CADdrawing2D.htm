@@ -1,4 +1,5 @@
 <!DOCTYPE HTML>
+
 <html>
 
 <head>
@@ -65,7 +66,7 @@
 				<form id="myForm3"> squeleton:
 					<input class="messageCheckbox" type="checkbox" onclick="drawSqueleton()" value="1" name="Squeleton">
 				</form>
-				<form id="myForm2"> fillet: 
+				<form id="myForm2"> fillet:
 					<input class="messageCheckbox" type="checkbox" onclick="drawFilletpts()" value="2" name="Fillet">
 				</form>
 				<form id="myForm1"> origin:
@@ -91,11 +92,13 @@
 		var myUrl = "./examples/Part-spigot1.json";
 		// ------------------------------------------
 
-		//-------------------------------------------------------------------
-		// function:    doInitialization
-		//              launch doInitialization at the end of
-		//              load JSON function
 
+		/**
+		 * Initialize drawing
+		 * 
+		 * <p> Launch doInitialization at the end of load JSON
+		 * function. </p>
+		 */
 		function doInitialization() {
 			"use strict";
 
@@ -152,7 +155,10 @@
 		}
 
 
-		// save as SVG
+		/**
+		 * Save data as .SVG file
+		 * 
+		 */
 		function saveTextAsSVG() {
 			"use strict";
 			//var textToWrite = document.getElementById("inputTextToSave").value;
@@ -185,7 +191,11 @@
 		}
 
 
-		// save file
+		/**
+		 * Save data in JSON file
+		 * 
+		 * <p>plain text in JSON format</p>
+		 */
 		function saveTextAsFile() {
 			"use strict";
 
@@ -217,15 +227,22 @@
 		}
 
 
+		/**
+		 * destro Click element
+		 */
 		function destroyClickedElement(myEvent) {
 			"use strict";
 			document.body.removeChild(myEvent.target);
 		} // destroyClickedElement
 
 
-		//-------------------------------------------------------------
-		// Test if str is JSON format
-		//-------------------------------------------------------------
+		/**
+		 * Test if str is JSON format
+		 * 
+		 * @param {string} str
+		 * @return {boolean} true or false
+		 */
+		/*
 		function IsJsonString(str) {
 			try {
 				JSON.parse(str);
@@ -234,6 +251,7 @@
 			}
 			return true;
 		}
+		*/
 	</script>
 
 
