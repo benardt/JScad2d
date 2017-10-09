@@ -4,12 +4,20 @@
         
        
         Author: Thierry Bénard
-        Date: 30 Sep 2017
+        Date: 09 Oct 2017
 
 
 \*/
 
 "use strict";
+
+
+// -------------------------------------------
+// Global variable
+// -------------------------------------------
+var theObj;
+var myDoc;
+var theSvgElement;
 
 var NSSVG = 'http://www.w3.org/2000/svg';
 
@@ -55,6 +63,31 @@ function mathEval(exp) {
 			return "Invalid arithmetic expression";
 		}
 	}
+}
+
+
+/**
+ * Initialize drawing
+ * 
+ * <p> Launch doInitialization at the end of load JSON
+ * function. </p>
+ */
+function doInitialization() {
+	"use strict";
+
+	// Open new window for drawing
+	var myWindow = window.open('', 'Drawing', "width=600, height=400", '');
+	myWindow.document.open();
+	myWindow.document.writeln('<h2>Drawing</h2>');
+	myWindow.document.writeln('<div id=\"drawing1\"></div>');
+	myDoc = myWindow.document;
+	myWindow.document.close();
+
+	// Add event to body: each time a key is hit -> launch function 'doUpdate'
+	document.body.addEventListener("keyup", doUpdate, false);
+
+	// Start function 'doUpdate' for the first time
+	doUpdate();
 }
 
 
