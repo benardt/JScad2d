@@ -23,7 +23,6 @@
 	<script src="./jsoneditor/jsoneditor.min.js"></script>
 	<script src="./filereader/filereader.js"></script>
 	<script src="./JScad2d.js"></script>
-	<script src="./zoom.js"></script>
 </head>
 
 <body>
@@ -39,21 +38,21 @@
 		<tr>
 			<td class="menu">Save file to: </td>
 			<td class="menu">
-				<button onclick="saveTextAsFile()">JSON</button>&nbsp;
-				<button onclick="saveTextAsSVG()">SVG</button>&nbsp;
+				<button onclick="JScad2d.saveTextAsFile()">JSON</button>&nbsp;
+				<button onclick="JScad2d.saveTextAsSVG()">SVG</button>&nbsp;
 				<button onclick="readfile(myUrl)">Test</button>
 			</td>
 		</tr>
 		<tr>
 			<td class="menu">
-				<button type="button" onclick="zoom('zoomIn');">Zoom In</button>
-				<button type="button" onclick="zoom('zoomOut');">Zoom Out</button>
+				<button type="button" onclick="JScad2d.zoom('zoomIn');">Zoom In</button>
+				<button type="button" onclick="JScad2d.zoom('zoomOut');">Zoom Out</button>
 			</td>
 			<td class="menu">
-				<button type="button" onclick="pan('left');">&#8678;</button>
-				<button type="button" onclick="pan('up');">&#8679;</button>
-				<button type="button" onclick="pan('down');">&#8681;</button>
-				<button type="button" onclick="pan('right');">&#8680;</button>
+				<button type="button" onclick="JScad2d.pan('left');">&#8678;</button>
+				<button type="button" onclick="JScad2d.pan('up');">&#8679;</button>
+				<button type="button" onclick="JScad2d.pan('down');">&#8681;</button>
+				<button type="button" onclick="JScad2d.pan('right');">&#8680;</button>
 			</td>
 		</tr>
 		<tr>
@@ -64,15 +63,15 @@
 		<tr>
 			<td class="menu" colspan="3">
 				<form id="myForm3"> squeleton:
-					<input class="messageCheckbox" type="checkbox" onclick="drawSqueleton()" value="1" name="Squeleton">
+					<input class="messageCheckbox" type="checkbox" onclick="JScad2d.drawSqueleton()" value="1" name="Squeleton">
 				</form>
 				<form id="myForm2"> fillet:
-					<input class="messageCheckbox" type="checkbox" onclick="drawFilletpts()" value="2" name="Fillet">
+					<input class="messageCheckbox" type="checkbox" onclick="JScad2d.drawFilletpts()" value="2" name="Fillet">
 				</form>
 				<form id="myForm1"> origin:
-					<input class="messageCheckbox" type="checkbox" onclick="drawOrigin(theObj, 'blue')" value="3" name="Origin">
+					<input class="messageCheckbox" type="checkbox" onclick="JScad2d.drawOrigin('blue')" value="3" name="Origin">
 				</form>
-				<button type="button" onclick="doDebug(theObj);">Debug</button>
+				<button type="button" onclick="JScad2d.doDebug();">Debug</button>
 			</td>
 		</tr>
 	</table>
@@ -96,7 +95,7 @@
 					// put date read from file to editor object
 					editor.setText(event.target.result);
 					//doUpdate();
-					doInitialization();
+					JScad2d.doInitialization();
 				}
 			}
 		});
@@ -116,7 +115,7 @@
 			if (request.status === 200) {
 				//document.getElementById(container).innerHTML = request.responseText;
 				editor.setText(request.responseText);
-				doInitialization();
+				JScad2d.doInitialization();
 			}
 			return 0;
 		}
