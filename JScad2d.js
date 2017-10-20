@@ -2,7 +2,7 @@
  * Function for 2D cad drawing
  * 
  * Author: Thierry Bénard
- * Date: 16 Oct 2017
+ * Date: 20 Oct 2017
  * 
  */
 
@@ -17,10 +17,11 @@
 	var theObj;
 	var theSvgElement;
 
+	// Parameters
 	var panRate = 10; // Number of pixels to pan per key press.    
 	var zoomRate = 1.1; // Must be greater than 1. Increase this value for faster zooming (i.e., less granularity).
-
 	var NSSVG = 'http://www.w3.org/2000/svg';
+	var WINDOWS_WIDTH = 600;
 
 	var JScad2d = window.JScad2d = {
 		doInitialization: doInitialization,
@@ -88,16 +89,67 @@
 	function doInitialization() {
 		"use strict";
 
+		var svg = "";
+		
+		//console.log(myDoc + " / " + theSvgElement);
+
+		if (typeof theSvgElement === "undefined") {
+		// Add event to body: each time a key is hit -> launch function 'doUpdate'
+		document.body.addEventListener("keyup", doUpdate, false);
+
 		// Open new window for drawing
-		var myWindow = window.open('', 'Drawing', "width=600, height=400", '');
+		var myWindow = window.open('', 'Drawing', "width=" + WINDOWS_WIDTH + ", height=450", '');
 		myWindow.document.open();
 		myWindow.document.writeln('<h2>Drawing</h2>');
 		myWindow.document.writeln('<div id=\"drawing1\"></div>');
 		myDoc = myWindow.document;
 		myWindow.document.close();
 
-		// Add event to body: each time a key is hit -> launch function 'doUpdate'
-		document.body.addEventListener("keyup", doUpdate, false);
+
+			svg = "<svg height=\"400\" width=\"600\" viewBox=\"\" xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
+
+			// Add basic information about SVG drawing
+			svg += "<title>" + "My drawing" + "</title>";
+			svg += "<desc>Write drawing description here...</desc>";
+
+			svg +=  `<defs><style type="text/css">
+				line.dim {
+					stroke-width: 1;
+				}
+				path.squeleton {
+					stroke: red;
+					stroke-width: 1;
+					fill: white;
+					fill-opacity: 0.25;
+				}
+				text.squeleton {
+					fill: red;
+				}
+				circle.centerfillet {
+					fill: pink;
+					stroke-width: 0;
+				}
+				circle.origin {
+					fill: blue;
+					stroke-width: 0;
+				}
+				</style></defs>
+				`;
+
+			// Add containers: dimension, origin and lines
+			svg += "\n<defs id=\"hatchpattern\" ></defs>";
+			svg += "\n<g id=\"dimension\"></g>";
+			svg += "\n<g id=\"origin\"></g>";
+			svg += "\n</svg>";
+
+			// Draw SVG in MyDoc window
+			myDoc.getElementById("drawing1").innerHTML = svg;
+			// catch SVG in theSvgElement variable for further function
+			theSvgElement = myDoc.getElementsByTagName("svg")[0];
+
+			// Pattern for Arrow (marker) with default color value
+			doArrowpattern();
+		}
 
 		// Start function 'doUpdate' for the first time
 		doUpdate();
@@ -110,34 +162,97 @@
 	function doUpdate() {
 		"use strict";
 
+		var noview = 0,
+			noshape = 0,
+			nodim = 0,
+			currview = {};
+
 		// Put all data from JSON editor to theObj
 		theObj = editor.get();
-
 		// Check if PART or ASSY object
 		if (theObj.Header.Type === "part") {
 			// no active now. Waiting coding for assy
 		}
-
-		// -----------------------------------------------
-		// Draw the shaoe
-		// -------------------------------------------------
-		var noview = 0,
-			noshape = 0,
-			nopt = 0,
-			strTmp = "",
-			svg = "",
-			nodim = 0,
-			currview = {},
-			limit = {};
-
-
 		// replace parameters by value and evaluate formula
 		theObj = doDeparam(theObj);
 		// put all coordinates in cartesian
 		theObj = doCoordonate(theObj);
 
-		// Initialize SVG with VIEW BOX -----------------------------------------
-		// Here place function to find min x & min y & max x & max y to automatize the viewBox behavior
+		theSvgElement.setAttribute("viewBox", doViewbox());
+
+		var svgg = theSvgElement.getElementById('hatchpattern');
+		while (svgg.firstChild) {
+			svgg.removeChild(svgg.firstChild);
+		}
+		doHatchpattern();
+
+		// Create containers for each view or empty them if exist
+		var gview = [];
+		for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
+			svgg = theSvgElement.getElementById('view' + noview);
+			if (svgg === null) {
+				gview.push(document.createElementNS(NSSVG, "g"));
+				gview[gview.length - 1].setAttributeNS(null, "id", "view" + noview);
+				gview[gview.length - 1].setAttributeNS(null, "class", "basicview");
+				theSvgElement.appendChild(gview[gview.length - 1]);
+			} else {
+				while (svgg.firstChild) {
+					svgg.removeChild(svgg.firstChild);
+				}
+			}
+		}
+
+		// draw shape (with fillet at corner if specified)
+		for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
+			currview = theObj.Views[noview];
+			for (noshape = 0; noshape <= currview.Shapes.length - 1; noshape += 1) {
+				Shape(currview.Header.Name,
+					currview.Shapes[noshape].Points,
+					theObj.Header.Scale,
+					currview.Header.Origine,
+					currview.Shapes[noshape].Fill,
+					noview,
+					theObj.Format,
+					theSvgElement);
+			}
+		}
+
+
+		// draw Lines from theSvgElement and view #
+		for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
+			drawLine(noview, theSvgElement, theObj);
+		}
+
+		// draw dimension from the SvgElement (after remove old ones)
+		svgg = theSvgElement.getElementById('dimension');
+		while (svgg.firstChild) {
+			svgg.removeChild(svgg.firstChild);
+		}
+		for (nodim = 0; nodim <= theObj.Dimensions.length - 1; nodim += 1) {
+			drawDimension(theSvgElement, theObj, theObj.Dimensions[nodim]);
+		} // for
+		changeClasscolor('dim', theObj.Format.Dimensions_color);
+
+		// draw origin point for each view
+		drawOrigin(theObj, 'blue');
+		drawFilletpts();
+		drawSqueleton();
+
+		return 0;
+	}
+
+	/**
+	 * do viewBox attribute
+	 */
+	function doViewbox() {
+		var noview = 0,
+			strTmp = "",
+			limit = {},
+			currview,
+			noshape = 0,
+			nopt = 0; // numero point
+
+		// Here find min x & min y & max x & max y to automatize the viewBox behavior
 		limit = {
 			min: {
 				x: 1000000,
@@ -163,114 +278,90 @@
 				} // for
 			} // for
 		} // for
-
-		if (typeof theSvgElement === "undefined") {
-			// Zoom
-			strTmp = (theObj.Header.Scale * limit.min.x) + " " +
-				(theObj.Header.Scale * limit.min.y) + " " +
-				(theObj.Header.Scale * (limit.max.x - limit.min.x)) + " " +
-				(theObj.Header.Scale * (limit.max.y - limit.min.y));
-			svg = "<svg height=\"400\" width=\"600\" viewBox=\"" +
-				strTmp +
-				"\"  xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
-		} else {
-			// Grab the object representing the SVG element's viewBox attribute.
-			var viewBox = theSvgElement.getAttribute('viewBox');
-
-			svg = "<svg height=\"400\" width=\"600\" viewBox=\"" +
-				viewBox +
-				"\"  xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
-		}
-		// End of initialize SVG with VIEW BOX -----------------------------------------
-
-
-		// Add basic information about SVG drawing
-		svg += "<title>" + "My drawing" + "</title>";
-		svg += "<desc>A path that draws a triangle</desc>";
-
-
-		// Patern for hatch
-		for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
-			if (theObj.Views[noview].Header.Hatch.Distance !== null) {
-				svg += "<defs>";
-				svg += "<pattern id=\"diagonalHatch" + "View" + noview + "\" " +
-					"patternUnits=\"userSpaceOnUse\" " +
-					"width=\"" + theObj.Views[noview].Header.Hatch.Distance + "\" " +
-					"height=\"" + theObj.Views[noview].Header.Hatch.Distance + "\" " +
-					"patternTransform=\"rotate(" + theObj.Views[noview].Header.Hatch.Angle + " 2 2)\">";
-				svg += "<path d=\"M -1,2 l 18,0\" " +
-					"stroke=\"" + theObj.Views[noview].Header.Hatch.Color + "\" " +
-					"stroke-width=\"" + theObj.Format.Hatch_thick + "\"/>";
-				svg += "</pattern>";
-				svg += "</defs>";
-			} // if
-		} // for
-
-		// Create container for each view
-		for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
-			svg += "<g class=\"basicview\" id=\"view" + noview + "\" ></g>";
-		}
-
-
-
-		// Add containers: dimension, origin and lines
-		svg += "\n<g id=\"dimension\"></g>";
-		svg += "\n<g id=\"origin\"></g>";
-
-		// Define marker (arrow) for dimension
-		svg += "<defs>";
-		svg += "<marker id=\"markerArrowStart\" markerWidth=\"13\" markerHeight=\"13\" refX=\"2\" refY=\"5\"  orient=\"auto\">";
-		svg += "<path d=\"M2,5 L10,9 L10,2 L2,5\" fill=\"" + theObj.Format.Dimensions_color + "\" />";
-		svg += "</marker>";
-		svg += "<marker id=\"markerArrowEnd\" markerWidth=\"13\" markerHeight=\"13\" refX=\"10\" refY=\"5\"  orient=\"auto\">";
-		svg += "<path d=\"M2,2 L2,9 L10,5 L2,2\" fill=\"" + theObj.Format.Dimensions_color + "\" />";
-		svg += "</marker>";
-		svg += "</defs>";
-
-		svg += "\n</svg>";
-
-		// Draw SVG in MyDoc window
-		myDoc.getElementById("drawing1").innerHTML = svg;
-
-		// catch SVG in theSvgElement variable for further function
-		theSvgElement = myDoc.getElementsByTagName("svg")[0];
-
-
-		// draw shape (with fillet at corner if specified)
-		for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
-			currview = theObj.Views[noview];
-			for (noshape = 0; noshape <= currview.Shapes.length - 1; noshape += 1) {
-				Shape(currview.Header.Name,
-					currview.Shapes[noshape].Points,
-					theObj.Header.Scale,
-					currview.Header.Origine,
-					currview.Shapes[noshape].Fill,
-					noview,
-					theObj.Format,
-					theSvgElement);
-			}
-		}
-
-
-		// draw Lines from theSvgElement and view #
-		for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
-			drawLine(noview, theSvgElement, theObj);
-		}
-
-		// draw dimension from the SvgElement
-		for (nodim = 0; nodim <= theObj.Dimensions.length - 1; nodim += 1) {
-			svg += drawDimension(theSvgElement, theObj, theObj.Dimensions[nodim]);
-		} // for
-
-		// draw origin point for each view
-		drawOrigin(theObj, 'blue');
-		drawFilletpts();
-		drawSqueleton();
-
-		return svg;
+		// Zoom
+		strTmp = (theObj.Header.Scale * limit.min.x) + " " +
+			(theObj.Header.Scale * limit.min.y) + " " +
+			(theObj.Header.Scale * (limit.max.x - limit.min.x)) + " " +
+			(theObj.Header.Scale * (limit.max.y - limit.min.y));
+		return strTmp;
 	}
 
 
+	/**
+	 * do pattern for Arrows
+	 */
+	function doArrowpattern() {
+
+		var myDefs = document.createElementNS(NSSVG, "defs");
+		myDefs.setAttributeNS(null, "id", "markerArrow");
+		var myMarker1 = document.createElementNS(NSSVG, "marker");
+		var myMarker2 = document.createElementNS(NSSVG, "marker");
+
+		myMarker1.setAttributeNS(null, "id", "markerArrowEnd");
+		myMarker1.setAttributeNS(null, "class", "dim");
+		myMarker1.setAttributeNS(null, "markerWidth", 13);
+		myMarker1.setAttributeNS(null, "markerHeight", 13);
+		myMarker1.setAttributeNS(null, "refX", 10);
+		myMarker1.setAttributeNS(null, "refY", 5);
+		myMarker1.setAttributeNS(null, "orient", "auto");
+
+		myMarker2.setAttributeNS(null, "id", "markerArrowStart");
+		myMarker2.setAttributeNS(null, "class", "dim");
+		myMarker2.setAttributeNS(null, "markerWidth", 13);
+		myMarker2.setAttributeNS(null, "markerHeight", 13);
+		myMarker2.setAttributeNS(null, "refX", 2);
+		myMarker2.setAttributeNS(null, "refY", 5);
+		myMarker2.setAttributeNS(null, "orient", "auto");
+
+		var myPath1 = document.createElementNS(NSSVG, "path");
+		myPath1.setAttributeNS(null, "d", "M2,2 L2,9 L10,5 L2,2");
+		var myPath2 = document.createElementNS(NSSVG, "path");
+		myPath2.setAttributeNS(null, "d", "M2,5 L10,9 L10,2 L2,5");
+
+		myMarker1.appendChild(myPath1);
+		myMarker2.appendChild(myPath2);
+
+		theSvgElement.appendChild(myDefs);
+		myDefs.appendChild(myMarker1);
+		myDefs.appendChild(myMarker2);
+
+		return 0;
+	}
+
+
+
+	/**
+	 * do Hatch patern
+	 */
+	function doHatchpattern() {
+		var noview;
+
+		var myDefs = theSvgElement.getElementById('hatchpattern');
+
+		var myPattern = [];
+		var myPath = [];
+		for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
+			if (theObj.Views[noview].Header.Hatch.Distance !== null) {
+				myPattern.push(document.createElementNS(NSSVG, "pattern"));
+				myPattern[myPattern.length - 1].setAttributeNS(null, "id", "diagonalHatchView" + noview);
+				myPattern[myPattern.length - 1].setAttributeNS(null, "patternUnits", "userSpaceOnUse");
+				myPattern[myPattern.length - 1].setAttributeNS(null, "width", theObj.Views[noview].Header.Hatch.Distance);
+				myPattern[myPattern.length - 1].setAttributeNS(null, "height", theObj.Views[noview].Header.Hatch.Distance);
+				myPattern[myPattern.length - 1].setAttributeNS(null, "patternTransform", "rotate(" + theObj.Views[noview].Header.Hatch.Angle + " 2 2)");
+
+				myPath.push(document.createElementNS(NSSVG, "path"));
+				myPath[myPath.length - 1].setAttributeNS(null, "d", "M -1,2 l 18,0");
+				myPath[myPath.length - 1].setAttributeNS(null, "stroke", theObj.Views[noview].Header.Hatch.Color);
+				myPath[myPath.length - 1].setAttributeNS(null, "stroke-width", theObj.Format.Hatch_thick);
+
+				myPattern[myPattern.length - 1].appendChild(myPath[myPath.length - 1]);
+				myDefs.appendChild(myPattern[myPattern.length - 1]);
+
+			} // if
+		} // for
+
+		return 0;
+	}
 
 
 	// ------------------------------------------------
@@ -395,8 +486,6 @@
 
 		return objet;
 	}
-
-
 
 
 	/**
@@ -695,7 +784,7 @@
 		path.setAttributeNS(null, 'stroke-width', 2);
 		gobj[0].appendChild(path);
 
-		// print squeleton in red
+		// print squeleton
 
 		// courbe d'origine sans les fillet pour le debug
 		mydattr = "M";
@@ -706,11 +795,8 @@
 		mydattr += "z";
 
 		var path1 = document.createElementNS(NSSVG, 'path');
+		path1.setAttributeNS(null, 'class', 'squeleton');
 		path1.setAttributeNS(null, 'd', mydattr);
-		path1.setAttributeNS(null, 'fill', 'white');
-		path1.setAttributeNS(null, 'fill-opacity', 0.25);
-		path1.setAttributeNS(null, 'stroke', 'red');
-		path1.setAttributeNS(null, 'stroke-width', 1);
 		gobj[1].appendChild(path1);
 
 		// Print key points of shape (squeleton) class = squeletontext
@@ -720,15 +806,13 @@
 		for (i = 0; i <= pts.length - 1; i += 1) {
 			texte.push(document.createElementNS(NSSVG, 'text'));
 			len = texte.length - 1;
+			texte[len].setAttributeNS(null, 'class', 'squeleton');
 			texte[len].setAttributeNS(null, 'x', scale * (ori.x + pts[i].x));
 			texte[len].setAttributeNS(null, 'y', scale * (ori.y - pts[i].y));
-			texte[len].setAttributeNS(null, 'fill', 'red');
 			texte[len].setAttributeNS(null, 'font-size', format.font_size);
 			texte[len].innerHTML = i;
 			gobj[3].appendChild(texte[len]);
 		}
-
-
 
 
 		// Print key points of fillet (squeleton) class=ptsfillet
@@ -827,11 +911,10 @@
 
 				cercle.push(document.createElementNS(NSSVG, 'circle'));
 				len = cercle.length - 1;
+				cercle[len].setAttributeNS(null, 'class', 'centerfillet');
 				cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + ca));
 				cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - cb));
 				cercle[len].setAttributeNS(null, 'r', 3);
-				cercle[len].setAttributeNS(null, 'stroke-width', 0);
-				cercle[len].setAttributeNS(null, 'fill', 'red');
 				gobj[4].appendChild(cercle[len]);
 			}
 		} // end for
@@ -840,13 +923,13 @@
 		return 0;
 	}
 
-
-	//--------------------------------------------------------------------------------------------
-	// Draw dimension
-	// input:
-	//         objet: all data in object form
-	//         dim  : objet of no of dimension to draw
-	//--------------------------------------------------------------------------------------------
+	/**
+	 * draw dimensions
+	 * 
+	 * @param {element} SVG
+	 * @param {object} raw data in object notation
+	 * @param {object} dimension[i] from object
+	 */
 	function drawDimension(theSvgElement, objet, dim) {
 		"use strict";
 		var eloignement = 5, // length in pixel between shape and attach line
@@ -869,6 +952,10 @@
 			line4,
 			text1,
 			textheight = 8;
+
+		// Create g element for current dimension
+		var svgg = document.createElementNS(NSSVG, "g");
+		theSvgElement.getElementById("dimension").appendChild(svgg);
 
 		switch (dim.Sens) {
 			case "top":
@@ -908,55 +995,55 @@
 
 			// lignes d'attache (Start side)
 			line1 = document.createElementNS(NSSVG, "line");
+			line1.setAttribute("class", "dim");
 			line1.setAttribute("x1", scale * (Ori.x + PtStart.x) + sens * eloignement);
 			line1.setAttribute("y1", scale * (Ori.y - PtStart.y));
 			line1.setAttribute("x2", scale * (Ori.x) + maxx);
 			line1.setAttribute("y2", scale * (Ori.y - PtStart.y));
-			line1.setAttribute("stroke", objet.Format.Dimensions_color);
-			theSvgElement.getElementById("dimension").appendChild(line1);
+			svgg.appendChild(line1);
 
 			// lignes d'attache (End side)
 			line2 = document.createElementNS(NSSVG, "line");
+			line2.setAttribute("class", "dim");
 			line2.setAttribute("x1", scale * (Ori.x + PtEnd.x) + sens * eloignement);
 			line2.setAttribute("y1", scale * (Ori.y - PtEnd.y));
 			line2.setAttribute("x2", scale * (Ori.x) + maxx);
 			line2.setAttribute("y2", scale * (Ori.y - PtEnd.y));
-			line2.setAttribute("stroke", objet.Format.Dimensions_color);
-			theSvgElement.getElementById("dimension").appendChild(line2);
+			svgg.appendChild(line2);
 
 			// Global line start
 			line3 = document.createElementNS(NSSVG, "line");
+			line3.setAttribute("class", "dim");
 			line3.setAttribute("x1", scale * (Ori.x) + (maxx - sens * eloignement));
 			line3.setAttribute("y1", scale * (Ori.y - PtStart.y));
 			line3.setAttribute("x2", scale * (Ori.x) + (maxx - sens * eloignement));
 			line3.setAttribute("y2", scale * (Ori.y - PtStart.y - 0.5 * (PtEnd.y - PtStart.y)) - Number(textheight));
-			line3.setAttribute("stroke", objet.Format.Dimensions_color);
 			line3.setAttribute('marker-start', 'url(#markerArrowStart)');
 			//line3.setAttribute('marker-end', 'url(#markerArrowEnd)');
-			theSvgElement.getElementById("dimension").appendChild(line3);
+			svgg.appendChild(line3);
 
 			// Global line end
 			line4 = document.createElementNS(NSSVG, "line");
+			line4.setAttribute("class", "dim");
 			line4.setAttribute("x1", scale * (Ori.x) + (maxx - sens * eloignement));
 			line4.setAttribute("y1", scale * (Ori.y - PtStart.y - 0.5 * (PtEnd.y - PtStart.y)) + Number(textheight));
 			line4.setAttribute("x2", scale * (Ori.x) + (maxx - sens * eloignement));
 			line4.setAttribute("y2", scale * (Ori.y - PtEnd.y));
-			line4.setAttribute("stroke", objet.Format.Dimensions_color);
 			//line4.setAttribute('marker-start', 'url(#markerArrowStart)');
 			line4.setAttribute('marker-end', 'url(#markerArrowEnd)');
-			theSvgElement.getElementById("dimension").appendChild(line4);
+			svgg.appendChild(line4);
 
 			// text
 			text1 = document.createElementNS(NSSVG, "text");
+			text1.setAttribute("class", "dim");
 			// need some special formula to take into account the height of font
 			text1.setAttribute("x", scale * Ori.x + (maxx - sens * eloignement) - 0.5 * objet.Format.font_size * (0.35146 / 25.4) * 96);
 			text1.setAttribute("text-anchor", "middle");
 			text1.setAttribute("style", "writing-mode: tb;");
 			text1.setAttribute("y", scale * (Ori.y - (PtStart.y + PtEnd.y) / 2));
-			text1.setAttribute("fill", objet.Format.Dimensions_color);
 			text1.setAttribute("font-size", objet.Format.font_size);
 			text1.textContent = stringtoprint;
-			theSvgElement.getElementById("dimension").appendChild(text1);
+			svgg.appendChild(text1);
 
 		} else if (dim.Direction === "horizontal") {
 
@@ -967,62 +1054,79 @@
 
 			// lignes d'attache (Start side)
 			line1 = document.createElementNS(NSSVG, "line");
+			line1.setAttribute("class", "dim");
 			line1.setAttribute("x1", scale * (Ori.x + PtStart.x));
 			line1.setAttribute("y1", scale * (Ori.y - PtStart.y) - sens * eloignement);
 			line1.setAttribute("x2", scale * (Ori.x + PtStart.x));
 			line1.setAttribute("y2", scale * (Ori.y) - maxy);
-			line1.setAttribute("stroke", objet.Format.Dimensions_color);
-			theSvgElement.getElementById("dimension").appendChild(line1);
+			svgg.appendChild(line1);
 
 			// lignes d'attache (End side)
 			line2 = document.createElementNS(NSSVG, "line");
+			line2.setAttribute("class", "dim");
 			line2.setAttribute("x1", scale * (Ori.x + PtEnd.x));
 			line2.setAttribute("y1", scale * (Ori.y - PtEnd.y) - sens * eloignement);
 			line2.setAttribute("x2", scale * (Ori.x + PtEnd.x));
 			line2.setAttribute("y2", scale * (Ori.y) - maxy);
-			line2.setAttribute("stroke", objet.Format.Dimensions_color);
-			theSvgElement.getElementById("dimension").appendChild(line2);
+			svgg.appendChild(line2);
 
 			// Global line start
 			line3 = document.createElementNS(NSSVG, "line");
+			line3.setAttribute("class", "dim");
 			line3.setAttribute("x1", scale * (Ori.x + PtStart.x));
 			line3.setAttribute("y1", scale * (Ori.y) - (maxy - sens * eloignement));
 			line3.setAttribute("x2", scale * (Ori.x + PtStart.x + 0.5 * (PtEnd.x - PtStart.x)) - 0.5 * getWidthString(stringtoprint, objet.Format.font_size, "Helvetica"));
 			line3.setAttribute("y2", scale * (Ori.y) - (maxy - sens * eloignement));
-			line3.setAttribute("stroke", objet.Format.Dimensions_color);
 			line3.setAttribute('marker-start', 'url(#markerArrowStart)');
 			//line3.setAttribute('marker-end', 'url(#markerArrowEnd)');
-			theSvgElement.getElementById("dimension").appendChild(line3);
+			svgg.appendChild(line3);
 
 			// Global line end
 			line4 = document.createElementNS(NSSVG, "line");
+			line4.setAttribute("class", "dim");
 			line4.setAttribute("x1", scale * (Ori.x + PtStart.x + 0.5 * (PtEnd.x - PtStart.x)) + 0.5 * getWidthString(stringtoprint, objet.Format.font_size, "Helvetica"));
 			line4.setAttribute("y1", scale * (Ori.y) - (maxy - sens * eloignement));
 			line4.setAttribute("x2", scale * (Ori.x + PtEnd.x));
 			line4.setAttribute("y2", scale * (Ori.y) - (maxy - sens * eloignement));
-			line4.setAttribute("stroke", objet.Format.Dimensions_color);
 			//line4.setAttribute('marker-start', 'url(#markerArrowStart)');
 			line4.setAttribute('marker-end', 'url(#markerArrowEnd)');
-			theSvgElement.getElementById("dimension").appendChild(line4);
+			svgg.appendChild(line4);
 
 			// text
 			text1 = document.createElementNS(NSSVG, "text");
+			text1.setAttribute("class", "dim");
 			text1.setAttribute("x", scale * (Ori.x + (PtStart.x + PtEnd.x) / 2));
 			text1.setAttribute("text-anchor", "middle");
 			// we have to find a formula to determine the paramter 4 in function of font and font size
 			text1.setAttribute("y", scale * (Ori.y) - (maxy - sens * eloignement - 0.5 * textheight));
-			text1.setAttribute("fill", objet.Format.Dimensions_color);
 			text1.setAttribute("background-color", "#ffff00");
 			text1.setAttribute("font-size", objet.Format.font_size);
 			text1.textContent = stringtoprint;
-			theSvgElement.getElementById("dimension").appendChild(text1);
+			svgg.appendChild(text1);
 
 		} // else if
-
 
 		return 0;
 	}
 
+	/**
+	 * change color for line, text and marker for className
+	 * 
+	 * @param {string} className (name of class)
+	 * @param {string} color (name of color)
+	 */
+	function changeClasscolor(className, color) {
+		var cols = theSvgElement.getElementsByClassName(className);
+		for (var i = 0; i < cols.length; i++) {
+			if(cols[i].tagName === "line") {
+				cols[i].style.stroke = color;
+			} else if (cols[i].tagName === "text") {
+				cols[i].style.fill = color;
+			} else if (cols[i].tagName === "marker") {
+				cols[i].style.fill = color;
+			}
+		}
+	}
 
 	/**
 	 * draw point constructor for fillet
@@ -1045,18 +1149,12 @@
 		return 0;
 	}
 
-	// ------------------------------------------------
-	// function: Draw origin
-	// draw a filled circle at each view origin
-	// input : objet = the Object json file
-	// ------------------------------------------------
 
 	/**
 	 * Draw origin point in color
 	 * 
-	 * @param {string} color
 	 */
-	function drawOrigin(mycolor) {
+	function drawOrigin() {
 		"use strict";
 		var x = document.forms.myForm1,
 			noview,
@@ -1066,11 +1164,10 @@
 			// draw origin for each View
 			for (noview = 0; noview <= currview.length - 1; noview += 1) {
 				var circle = document.createElementNS(NSSVG, "circle");
+				circle.setAttribute("class", 'origin');
 				circle.setAttribute("cx", theObj.Header.Scale * currview[noview].Header.Origine.x);
 				circle.setAttribute("cy", theObj.Header.Scale * currview[noview].Header.Origine.y);
 				circle.setAttribute("r", 4);
-				circle.setAttribute("fill", mycolor);
-				circle.setAttribute("stroke-width", 0);
 				theSvgElement.getElementById("origin").appendChild(circle);
 			} // for
 		} else if (x[0].checked === false) {
@@ -1272,7 +1369,6 @@
 	 * print Debug data in another window
 	 */
 	function doDebug() {
-		"use strict";
 
 		var i = 0,
 			noView = 0,
