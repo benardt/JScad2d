@@ -1,3 +1,7 @@
+/*eslint no-undef: "error"*/
+/*eslint-env browser*/
+
+
 /**
  * Function for 2D cad drawing
  * 
@@ -34,57 +38,67 @@
 		pan: pan,
 		doDebug: doDebug
 	};
-
-	// --------------------------------------------------
-	// object descriptor: Point
-	// --------------------------------------------------
+	
+	/**
+	 * object descriptor: Point
+	 */
 	function Point(x, y, r) {
-
 		this.x = x;
 		this.y = y;
 		this.r = r;
 	}
 
-
-
-	//---------------------------------------------------------------------------------------
-	// Calculator parser: string --> value
-	// Replace a string formula with value of formula result
-	//---------------------------------------------------------------------------------------
+	
+	/**
+	 * 
+	 * @param {string} expression to convert
+	 * @return {number} result of equation or
+	 *                  'Invalid arithmetic expression' if error
+	 */
 	function mathEval(exp) {
 		var reg = /(?:[a-z$_][a-z0-9$_]*)|(?:[;={}\[\]"'!&<>^\\?:])/ig,
 			valid = true,
-			myVar;
+			myVar,
+			result;
 
 		// Detect valid JS identifier names and replace them
 		myVar = exp.replace(reg, function($0) {
+			var mathf;
 			// If the name is a direct member of Math, allow
 			if (Math.hasOwnProperty($0)) {
-				return "Math." + $0;
+				mathf = "Math." + $0;
 			} else {
 				// Otherwise the expression is invalid
 				valid = false;
 			}
+			return mathf;
 		});
 
 		// Don't eval if our replace function flagged as invalid
 		if (!valid) {
-			return "Invalid arithmetic expression";
+			result = "Invalid arithmetic expression";
 		} else {
 			try {
-				return eval(myVar);
+				result = eval(myVar);
 			} catch (e) {
-				return "Invalid arithmetic expression";
+				result = "Invalid arithmetic expression";
 			}
 		}
+		return result;
 	}
 
 
 	/**
 	 * Initialize drawing
 	 * 
-	 * <p> Launch doInitialization at the end of load JSON
-	 * function. </p>
+	 * <p>
+	 * Launch doInitialization at the end of load JSON function. 
+	 * 1. add event
+	 * 2. open window for drawing
+	 * 3. build first svg element
+	 * 4. launch doUpdate()
+	 * </p>
+	 * 
 	 */
 	function doInitialization() {
 		"use strict";
@@ -113,6 +127,9 @@
 			svg += "<desc>Write drawing description here...</desc>";
 
 			svg +=  `<defs><style type="text/css">
+				path.basicshape {
+					stroke-width: 2;
+				}
 				line.dim {
 					stroke-width: 1;
 				}
@@ -206,8 +223,7 @@
 		for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
 			currview = theObj.Views[noview];
 			for (noshape = 0; noshape <= currview.Shapes.length - 1; noshape += 1) {
-				Shape(currview.Header.Name,
-					currview.Shapes[noshape].Points,
+				Shape(currview.Shapes[noshape].Points,
 					theObj.Header.Scale,
 					currview.Header.Origine,
 					currview.Shapes[noshape].Fill,
@@ -234,7 +250,7 @@
 		changeClasscolor('dim', theObj.Format.Dimensions_color);
 
 		// draw origin point for each view
-		drawOrigin(theObj, 'blue');
+		drawOrigin();
 		drawFilletpts();
 		drawSqueleton();
 
@@ -363,12 +379,16 @@
 		return 0;
 	}
 
-
-	// ------------------------------------------------
-	// function: do de-parametrization
-	// replace all parameters by the right number value
-	// input : objet = the Object json file
-	// ------------------------------------------------
+	
+	/**
+	 * de de-parametrization
+	 * 
+	 * <p>transform all parameters in number and
+	 * calculate equation with number<p>
+	 * 
+	 * @param {objet} main objet (json file) with all data
+	 * @return {objet} object with change
+	 */
 	function doDeparam(objet) {
 
 		var i,
@@ -634,13 +654,13 @@
 		"use strict";
 		var i,
 			mydattr = "",
-			pts = arguments[1], // points du squelette de la forme pleine
-			scale = arguments[2], // échelle de l'affichage
-			ori = arguments[3], // origine du dessin
-			texture = arguments[4], // texture
-			noview = arguments[5], // view # for hatch pattern
-			format = arguments[6], // format
-			thesvgelem = arguments[7],
+			pts = arguments[0], // points du squelette de la forme pleine
+			scale = arguments[1], // échelle de l'affichage
+			ori = arguments[2], // origine du dessin
+			texture = arguments[3], // texture
+			noview = arguments[4], // view # for hatch pattern
+			format = arguments[5], // format
+			thesvgelem = arguments[6],
 
 			p = [], // number of previous point
 			s = [], // number of next point
@@ -778,10 +798,10 @@
 		}
 
 		var path = document.createElementNS(NSSVG, 'path');
+		path.setAttributeNS(null, 'class', 'basicshape');
 		path.setAttributeNS(null, 'd', mydattr);
 		path.setAttributeNS(null, 'fill', myFill);
 		path.setAttributeNS(null, 'stroke', 'black');
-		path.setAttributeNS(null, 'stroke-width', 2);
 		gobj[0].appendChild(path);
 
 		// print squeleton

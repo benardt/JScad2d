@@ -69,7 +69,7 @@
 					<input class="messageCheckbox" type="checkbox" onclick="JScad2d.drawFilletpts()" value="2" name="Fillet">
 				</form>
 				<form id="myForm1"> origin:
-					<input class="messageCheckbox" type="checkbox" onclick="JScad2d.drawOrigin('blue')" value="3" name="Origin">
+					<input class="messageCheckbox" type="checkbox" onclick="JScad2d.drawOrigin()" value="3" name="Origin">
 				</form>
 				<button type="button" onclick="JScad2d.doDebug();">Debug</button>
 			</td>
@@ -91,7 +91,7 @@
 		FileReaderJS.setupInput(document.getElementById('loadDocument'), {
 			readAsDefault: 'Text',
 			on: {
-				load: function(event, file) {
+				load: function(event) {
 					// put date read from file to editor object
 					editor.setText(event.target.result);
 					//doUpdate();
