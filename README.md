@@ -77,5 +77,6 @@ Draw parts and assemble them in an assembly drawing. Parts and Assy drawing are 
 
 * jsoneditor (https://github.com/josdejong/jsoneditor/)
 * filereader.js (https://github.com/bgrins/filereader.js)
+* svg-pan-zoom (https://github.com/ariutta/svg-pan-zoom)
 
 

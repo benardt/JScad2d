@@ -20,6 +20,7 @@
 	</style>
 	<link rel="stylesheet" type="text/css" href="./jsoneditor/jsoneditor.min.css">
 
+	<script src="./svg-pan-zoom/svg-pan-zoom.js"></script>
 	<script src="./jsoneditor/jsoneditor.min.js"></script>
 	<script src="./filereader/filereader.js"></script>
 	<script src="./JScad2d.js"></script>
@@ -40,13 +41,13 @@
 			<td class="menu">
 				<button onclick="JScad2d.saveTextAsFile()">JSON</button>&nbsp;
 				<button onclick="JScad2d.saveTextAsSVG()">SVG</button>&nbsp;
-				<button onclick="readfile(myUrl)">Test</button>
 			</td>
 		</tr>
 		<tr>
 			<td class="menu">
 				<button type="button" onclick="JScad2d.zoom('zoomIn');">Zoom In</button>
 				<button type="button" onclick="JScad2d.zoom('zoomOut');">Zoom Out</button>
+				<button type="button" onclick="JScad2d.zoom('reset');">Reset</button>
 			</td>
 			<td class="menu">
 				<button type="button" onclick="JScad2d.pan('left');">&#8678;</button>
@@ -72,6 +73,7 @@
 					<input class="messageCheckbox" type="checkbox" onclick="JScad2d.drawOrigin()" value="3" name="Origin">
 				</form>
 				<button type="button" onclick="JScad2d.doDebug();">Debug</button>
+				<button onclick="readfile(myUrl)">Example</button>
 			</td>
 		</tr>
 	</table>

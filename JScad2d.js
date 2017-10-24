@@ -1,7 +1,3 @@
-/*eslint no-undef: "error"*/
-/*eslint-env browser*/
-
-
 /**
  * Function for 2D cad drawing
  * 
@@ -20,6 +16,7 @@
 	var myDoc;
 	var theObj;
 	var theSvgElement;
+	var panZoomInstance;
 
 	// Parameters
 	var panRate = 10; // Number of pixels to pan per key press.    
@@ -38,7 +35,7 @@
 		pan: pan,
 		doDebug: doDebug
 	};
-	
+
 	/**
 	 * object descriptor: Point
 	 */
@@ -48,7 +45,7 @@
 		this.r = r;
 	}
 
-	
+
 	/**
 	 * 
 	 * @param {string} expression to convert
@@ -101,32 +98,30 @@
 	 * 
 	 */
 	function doInitialization() {
-		"use strict";
-
 		var svg = "";
-		
+
 		//console.log(myDoc + " / " + theSvgElement);
 
 		if (typeof theSvgElement === "undefined") {
-		// Add event to body: each time a key is hit -> launch function 'doUpdate'
-		document.body.addEventListener("keyup", doUpdate, false);
+			// Add event to body: each time a key is hit -> launch function 'doUpdate'
+			document.body.addEventListener("keyup", doUpdate, false);
 
-		// Open new window for drawing
-		var myWindow = window.open('', 'Drawing', "width=" + WINDOWS_WIDTH + ", height=450", '');
-		myWindow.document.open();
-		myWindow.document.writeln('<h2>Drawing</h2>');
-		myWindow.document.writeln('<div id=\"drawing1\"></div>');
-		myDoc = myWindow.document;
-		myWindow.document.close();
+			// Open new window for drawing
+			var myWindow = window.open('', 'Drawing', "width=" + WINDOWS_WIDTH + ", height=450", '');
+			myWindow.document.open();
+			myWindow.document.writeln('<h2>Drawing</h2>');
+			myWindow.document.writeln('<div id=\"drawing1\" style=\"width: 600px; height: 400px; border:1px solid black; \"></div>');
+			myDoc = myWindow.document;
+			myWindow.document.close();
 
 
-			svg = "<svg height=\"400\" width=\"600\" viewBox=\"\" xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
+			svg = "<svg style=\"display: inline; width: inherit; min-width: inherit; max-width: inherit; height: inherit; min-height: inherit; max-height: inherit;\" xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">";
 
 			// Add basic information about SVG drawing
 			svg += "<title>" + "My drawing" + "</title>";
 			svg += "<desc>Write drawing description here...</desc>";
 
-			svg +=  `<defs><style type="text/css">
+			svg += `<defs><style type="text/css">
 				path.basicshape {
 					stroke-width: 2;
 				}
@@ -163,9 +158,10 @@
 			myDoc.getElementById("drawing1").innerHTML = svg;
 			// catch SVG in theSvgElement variable for further function
 			theSvgElement = myDoc.getElementsByTagName("svg")[0];
-
+			
 			// Pattern for Arrow (marker) with default color value
 			doArrowpattern();
+			
 		}
 
 		// Start function 'doUpdate' for the first time
@@ -195,18 +191,14 @@
 		// put all coordinates in cartesian
 		theObj = doCoordonate(theObj);
 
-		theSvgElement.setAttribute("viewBox", doViewbox());
+		//theSvgElement.setAttribute("viewBox", doViewbox());
 
-		var svgg = theSvgElement.getElementById('hatchpattern');
-		while (svgg.firstChild) {
-			svgg.removeChild(svgg.firstChild);
-		}
 		doHatchpattern();
 
 		// Create containers for each view or empty them if exist
 		var gview = [];
 		for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
-			svgg = theSvgElement.getElementById('view' + noview);
+			var svgg = theSvgElement.getElementById('view' + noview);
 			if (svgg === null) {
 				gview.push(document.createElementNS(NSSVG, "g"));
 				gview[gview.length - 1].setAttributeNS(null, "id", "view" + noview);
@@ -247,13 +239,20 @@
 		for (nodim = 0; nodim <= theObj.Dimensions.length - 1; nodim += 1) {
 			drawDimension(theSvgElement, theObj, theObj.Dimensions[nodim]);
 		} // for
-		changeClasscolor('dim', theObj.Format.Dimensions_color);
+
+		// Change Format (mainly linked with CSS)
+		changeClasscolor('dim', theObj.Format.Dimensions_color, theObj.Format.shape_thick);
 
 		// draw origin point for each view
 		drawOrigin();
 		drawFilletpts();
 		drawSqueleton();
 
+		panZoomInstance = svgPanZoom(theSvgElement, {
+          zoomEnabled: true,
+          controlIconsEnabled: false
+        });
+        
 		return 0;
 	}
 
@@ -353,7 +352,13 @@
 		var noview;
 
 		var myDefs = theSvgElement.getElementById('hatchpattern');
+		
+		// 1st remove old hatchpattern
+		while (myDefs.firstChild) {
+			myDefs.removeChild(myDefs.firstChild);
+		}
 
+		// 2nd build new hatchpattern
 		var myPattern = [];
 		var myPath = [];
 		for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
@@ -379,7 +384,7 @@
 		return 0;
 	}
 
-	
+
 	/**
 	 * de de-parametrization
 	 * 
@@ -1134,11 +1139,13 @@
 	 * 
 	 * @param {string} className (name of class)
 	 * @param {string} color (name of color)
+	 * @param {number} myThickness (thickness for shape)
 	 */
-	function changeClasscolor(className, color) {
+	function changeClasscolor(className, color, myThickness) {
+		// change color for className ('dim')
 		var cols = theSvgElement.getElementsByClassName(className);
 		for (var i = 0; i < cols.length; i++) {
-			if(cols[i].tagName === "line") {
+			if (cols[i].tagName === "line") {
 				cols[i].style.stroke = color;
 			} else if (cols[i].tagName === "text") {
 				cols[i].style.fill = color;
@@ -1146,7 +1153,15 @@
 				cols[i].style.fill = color;
 			}
 		}
+		// change thickness for shape class=basicshape
+		cols = theSvgElement.getElementsByClassName('basicshape');
+		for (i = 0; i < cols.length; i++) {
+			if (cols[i].tagName === "path") {
+				cols[i].style.strokeWidth = myThickness;
+			}
+		}
 	}
+
 
 	/**
 	 * draw point constructor for fillet
@@ -1175,7 +1190,6 @@
 	 * 
 	 */
 	function drawOrigin() {
-		"use strict";
 		var x = document.forms.myForm1,
 			noview,
 			currview = theObj.Views;
@@ -1208,8 +1222,7 @@
 	 * <p>pass from hidden to visible</p>
 	 */
 	function drawSqueleton() {
-		"use strict";
-		var i = 0,
+		var index = 0,
 			len = 0,
 			nodes,
 			x;
@@ -1223,29 +1236,29 @@
 
 		if (x[0].checked === true) {
 			nodes = theSvgElement.getElementsByClassName('squeleton');
-			for (i = 0, len = nodes.length; i < len; i++) {
-				nodes[i].style.visibility = "visible";
+			for (index = 0, len = nodes.length; index < len; index++) {
+				nodes[index].style.visibility = "visible";
 			}
 			nodes = theSvgElement.getElementsByClassName('centerfillet');
-			for (i = 0, len = nodes.length; i < len; i++) {
-				nodes[i].style.visibility = "visible";
+			for (index = 0, len = nodes.length; index < len; index++) {
+				nodes[index].style.visibility = "visible";
 			}
 			nodes = theSvgElement.getElementsByClassName('squeletontext');
-			for (i = 0, len = nodes.length; i < len; i++) {
-				nodes[i].style.visibility = "visible";
+			for (index = 0, len = nodes.length; index < len; index++) {
+				nodes[index].style.visibility = "visible";
 			}
 		} else if (x[0].checked === false) {
 			nodes = theSvgElement.getElementsByClassName('squeleton');
-			for (i = 0, len = nodes.length; i < len; i++) {
-				nodes[i].style.visibility = "hidden";
+			for (index = 0, len = nodes.length; index < len; index++) {
+				nodes[index].style.visibility = "hidden";
 			}
 			nodes = theSvgElement.getElementsByClassName('centerfillet');
-			for (i = 0, len = nodes.length; i < len; i++) {
-				nodes[i].style.visibility = "hidden";
+			for (index = 0, len = nodes.length; index < len; index++) {
+				nodes[index].style.visibility = "hidden";
 			}
 			nodes = theSvgElement.getElementsByClassName('squeletontext');
-			for (i = 0, len = nodes.length; i < len; i++) {
-				nodes[i].style.visibility = "hidden";
+			for (index = 0, len = nodes.length; index < len; index++) {
+				nodes[index].style.visibility = "hidden";
 			}
 		}
 		return 0;
@@ -1359,30 +1372,19 @@
 	 * zoom function
 	 * 
 	 * @param {string} zoomIn or zoomOut
-	 * @return modify viewBox of theSvgElement (SVG element)
 	 */
 	function zoom(zoomType) {
-		"use strict";
-
-		var viewBox = theSvgElement.getAttribute('viewBox'), // Grab the object representing the SVG element's viewBox attribute.
-			viewBoxValues = viewBox.split(' '); // Create an array and insert each individual view box attribute value (assume they're seperated by a single whitespace character).
-
-		viewBoxValues[2] = parseFloat(viewBoxValues[2]); // Convert string "numeric" values to actual numeric values.
-		viewBoxValues[3] = parseFloat(viewBoxValues[3]);
-
+		
 		if (zoomType === 'zoomIn') {
-			viewBoxValues[2] /= zoomRate;
-			// Decrease the width and height attributes of the viewBox attribute to zoom in.
-			viewBoxValues[3] /= zoomRate;
+			panZoomInstance.zoomIn();
 		} else if (zoomType === 'zoomOut') {
-			viewBoxValues[2] *= zoomRate;
-			// Increase the width and height attributes of the viewBox attribute to zoom out.
-			viewBoxValues[3] *= zoomRate;
+			panZoomInstance.zoomOut();
+		} else if (zoomType === 'reset') {
+			panZoomInstance.resetZoom();
+			panZoomInstance.resetPan();
 		} else {
 			alert("function zoom(zoomType) given invalid zoomType parameter.");
 		}
-
-		theSvgElement.setAttribute('viewBox', viewBoxValues.join(' ')); // Convert the viewBoxValues array into a string with a white space character between the given values.      
 	}
 
 	/**
