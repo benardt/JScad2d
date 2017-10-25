@@ -2,7 +2,7 @@
  * Function for 2D cad drawing
  * 
  * Author: Thierry Bénard
- * Date: 20 Oct 2017
+ * Date: 25 Oct 2017
  * 
  */
 
@@ -158,10 +158,10 @@
 			myDoc.getElementById("drawing1").innerHTML = svg;
 			// catch SVG in theSvgElement variable for further function
 			theSvgElement = myDoc.getElementsByTagName("svg")[0];
-			
+
 			// Pattern for Arrow (marker) with default color value
 			doArrowpattern();
-			
+
 		}
 
 		// Start function 'doUpdate' for the first time
@@ -215,7 +215,7 @@
 		for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
 			currview = theObj.Views[noview];
 			for (noshape = 0; noshape <= currview.Shapes.length - 1; noshape += 1) {
-				Shape(currview.Shapes[noshape].Points,
+				Shape(noshape, currview.Shapes[noshape].Points,
 					theObj.Header.Scale,
 					currview.Header.Origine,
 					currview.Shapes[noshape].Fill,
@@ -248,11 +248,24 @@
 		drawFilletpts();
 		drawSqueleton();
 
+		svgg = theSvgElement.getElementsByClassName('textsqueleton');
+		for (var i = 0; i <= svgg.length - 1; i += 1) {
+			svgg[i].addEventListener('mouseover', function(evt) {
+				var t = evt.target;
+				document.getElementById('outputsqueleton').innerHTML = t.id;
+				// TODO print coordinate
+				// view:1 shape:2 node:0
+			});
+			svgg[i].addEventListener('mouseout', function() {
+				document.getElementById('outputsqueleton').innerHTML = '';
+			});
+		}
+
 		panZoomInstance = svgPanZoom(theSvgElement, {
-          zoomEnabled: true,
-          controlIconsEnabled: false
-        });
-        
+			zoomEnabled: true,
+			controlIconsEnabled: false
+		});
+
 		return 0;
 	}
 
@@ -352,7 +365,7 @@
 		var noview;
 
 		var myDefs = theSvgElement.getElementById('hatchpattern');
-		
+
 		// 1st remove old hatchpattern
 		while (myDefs.firstChild) {
 			myDefs.removeChild(myDefs.firstChild);
@@ -659,13 +672,14 @@
 		"use strict";
 		var i,
 			mydattr = "",
-			pts = arguments[0], // points du squelette de la forme pleine
-			scale = arguments[1], // échelle de l'affichage
-			ori = arguments[2], // origine du dessin
-			texture = arguments[3], // texture
-			noview = arguments[4], // view # for hatch pattern
-			format = arguments[5], // format
-			thesvgelem = arguments[6],
+			noshape = arguments[0],
+			pts = arguments[1], // points du squelette de la forme pleine
+			scale = arguments[2], // échelle de l'affichage
+			ori = arguments[3], // origine du dessin
+			texture = arguments[4], // texture
+			noview = arguments[5], // view # for hatch pattern
+			format = arguments[6], // format
+			thesvgelem = arguments[7],
 
 			p = [], // number of previous point
 			s = [], // number of next point
@@ -824,14 +838,15 @@
 		path1.setAttributeNS(null, 'd', mydattr);
 		gobj[1].appendChild(path1);
 
-		// Print key points of shape (squeleton) class = squeletontext
+		// Print key points of shape (squeleton) class = textsqueleton
 		var texte = [];
 		var len = 0;
 		// Affiche les numéros de chaque point
 		for (i = 0; i <= pts.length - 1; i += 1) {
 			texte.push(document.createElementNS(NSSVG, 'text'));
 			len = texte.length - 1;
-			texte[len].setAttributeNS(null, 'class', 'squeleton');
+			texte[len].setAttributeNS(null, 'class', 'squeleton textsqueleton');
+			texte[len].setAttributeNS(null, 'id', 'view:' + noview + ' shape:' + noshape + ' node:' + i);
 			texte[len].setAttributeNS(null, 'x', scale * (ori.x + pts[i].x));
 			texte[len].setAttributeNS(null, 'y', scale * (ori.y - pts[i].y));
 			texte[len].setAttributeNS(null, 'font-size', format.font_size);
@@ -1374,7 +1389,7 @@
 	 * @param {string} zoomIn or zoomOut
 	 */
 	function zoom(zoomType) {
-		
+
 		if (zoomType === 'zoomIn') {
 			panZoomInstance.zoomIn();
 		} else if (zoomType === 'zoomOut') {
