@@ -17,6 +17,13 @@
 			background: #4679bd;
 			color: #fff;
 		}
+		input.info {
+			background: beige;
+			border: 0px;
+			padding: 2px;
+			border-radius: 4px;
+			color: dimgrey;
+		}
 	</style>
 	<link rel="stylesheet" type="text/css" href="./jsoneditor/jsoneditor.min.css">
 
@@ -62,19 +69,23 @@
 			</td>
 		</tr>
 		<tr>
-			<td class="menu" colspan="3">
-				<form id="myForm3"> squeleton:
-					<input class="messageCheckbox" type="checkbox" onclick="JScad2d.drawSqueleton()" value="1" name="Squeleton">
+			<td class="menu" colspan="2">
+				<form id="squeleton"> squeleton:
+					<input class="messageCheckbox" type="checkbox" onclick="JScad2d.displayClassToggle('squeleton')" value="1" name="Squeleton">
 				</form>
-				<form id="myForm2"> fillet:
-					<input class="messageCheckbox" type="checkbox" onclick="JScad2d.drawFilletpts()" value="2" name="Fillet">
+				<form id="ptsfillet"> fillet:
+					<input class="messageCheckbox" type="checkbox" onclick="JScad2d.displayClassToggle('ptsfillet')" value="2" name="Fillet">
 				</form>
 				<form id="myForm1"> origin:
 					<input class="messageCheckbox" type="checkbox" onclick="JScad2d.drawOrigin()" value="3" name="Origin">
 				</form>
 				<button type="button" onclick="JScad2d.doDebug();">Debug</button>
 				<button onclick="readfile(myUrl)">Example</button>
-				<span id="outputsqueleton"></span>
+			</td>
+			<td id="nodeinfo" class="menu">
+				<span id="outputsqueleton"></span><br>
+				x: <input id="nodeinfox" class="info"></input><br>
+				y: <input id="nodeinfoy" class="info"></input>
 			</td>
 		</tr>
 	</table>

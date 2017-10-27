@@ -2,7 +2,7 @@
  * Function for 2D cad drawing
  * 
  * Author: Thierry Bénard
- * Date: 25 Oct 2017
+ * Date: 27 Oct 2017
  * 
  */
 
@@ -28,8 +28,7 @@
 		doInitialization: doInitialization,
 		saveTextAsFile: saveTextAsFile,
 		saveTextAsSVG: saveTextAsSVG,
-		drawSqueleton: drawSqueleton,
-		drawFilletpts: drawFilletpts,
+		displayClassToggle: displayClassToggle,
 		drawOrigin: drawOrigin,
 		zoom: zoom,
 		pan: pan,
@@ -191,8 +190,6 @@
 		// put all coordinates in cartesian
 		theObj = doCoordonate(theObj);
 
-		//theSvgElement.setAttribute("viewBox", doViewbox());
-
 		doHatchpattern();
 
 		// Create containers for each view or empty them if exist
@@ -245,21 +242,10 @@
 
 		// draw origin point for each view
 		drawOrigin();
-		drawFilletpts();
-		drawSqueleton();
+		displayClassToggle('ptsfillet');
+		displayClassToggle('squeleton');
 
-		svgg = theSvgElement.getElementsByClassName('textsqueleton');
-		for (var i = 0; i <= svgg.length - 1; i += 1) {
-			svgg[i].addEventListener('mouseover', function(evt) {
-				var t = evt.target;
-				document.getElementById('outputsqueleton').innerHTML = t.id;
-				// TODO print coordinate
-				// view:1 shape:2 node:0
-			});
-			svgg[i].addEventListener('mouseout', function() {
-				document.getElementById('outputsqueleton').innerHTML = '';
-			});
-		}
+		displayNodesinfo();
 
 		panZoomInstance = svgPanZoom(theSvgElement, {
 			zoomEnabled: true,
@@ -269,50 +255,59 @@
 		return 0;
 	}
 
-	/**
-	 * do viewBox attribute
-	 */
-	function doViewbox() {
-		var noview = 0,
-			strTmp = "",
-			limit = {},
-			currview,
-			noshape = 0,
-			nopt = 0; // numero point
 
-		// Here find min x & min y & max x & max y to automatize the viewBox behavior
-		limit = {
-			min: {
-				x: 1000000,
-				y: 1000000
-			},
-			max: {
-				x: -1000000,
-				y: -1000000
-			}
-		};
-		for (noview = 0; noview <= theObj.Views.length - 1; noview += 1) {
-			currview = theObj.Views[noview];
-			for (noshape = 0; noshape <= currview.Shapes.length - 1; noshape += 1) {
-				for (nopt = 0; nopt <= currview.Shapes[noshape].Points.length - 1; nopt += 1) {
-					limit.min.x = Math.min(limit.min.x,
-						currview.Header.Origine.x + currview.Shapes[noshape].Points[nopt].x);
-					limit.min.y = Math.min(limit.min.y,
-						currview.Header.Origine.y - currview.Shapes[noshape].Points[nopt].y);
-					limit.max.x = Math.max(limit.max.x,
-						currview.Header.Origine.x + currview.Shapes[noshape].Points[nopt].x);
-					limit.max.y = Math.max(limit.max.y,
-						currview.Header.Origine.y - currview.Shapes[noshape].Points[nopt].y);
-				} // for
-			} // for
-		} // for
-		// Zoom
-		strTmp = (theObj.Header.Scale * limit.min.x) + " " +
-			(theObj.Header.Scale * limit.min.y) + " " +
-			(theObj.Header.Scale * (limit.max.x - limit.min.x)) + " " +
-			(theObj.Header.Scale * (limit.max.y - limit.min.y));
-		return strTmp;
+
+	/**
+	 * Display info of Nodes
+	 * 
+	 * <p>
+	 * - display coordinate
+	 * </p>
+	 */
+	function displayNodesinfo() {
+			
+		var ptx = 0,
+			pty = 0,
+			arrpt = [],
+			t;
+		var svgg = theSvgElement.getElementsByClassName('textsqueleton');
+		for (var i = 0; i <= svgg.length - 1; i += 1) {
+			svgg[i].addEventListener('mouseover', function(evt) {
+				t = evt.target;
+				arrpt = t.id.split(" ");
+				
+				//1: Views; 3: Shapes; 5: Points
+				ptx = theObj.Views[arrpt[1]].Shapes[arrpt[3]].Points[arrpt[5]].x;
+				pty = theObj.Views[arrpt[1]].Shapes[arrpt[3]].Points[arrpt[5]].y;
+				
+				var elemx = document.getElementById("nodeinfox");
+				var elemy = document.getElementById("nodeinfoy");
+				
+				elemx.setAttribute("type", "text");
+				elemy.setAttribute("type", "text");
+				
+				elemx.readOnly = true;
+				elemy.readOnly = true;
+				
+				elemx.size = 10;
+				elemy.size = 10;
+				
+				elemx.value = ptx;
+				elemy.value = pty;
+				
+				document.getElementById("outputsqueleton").innerHTML = "View: " + arrpt[1] + " / Shape: " + arrpt[3];
+			});
+			svgg[i].addEventListener('mouseout', function() {
+				document.getElementById("nodeinfox").value = "";
+				document.getElementById("nodeinfoy").value = "";
+				document.getElementById("outputsqueleton").innerHTML = "";
+
+			});
+		}
+		
+		return 0;
 	}
+
 
 
 	/**
@@ -658,15 +653,9 @@
 	 * <p>
 	 * - return a path inside a <g></g> tag
 	 * - draw texture according to texture variable (hatch or not)
-	 * - according to 'affichage' variable add or not squeleton
 	 * </p>
 	 * 
 	 * @param {} ...
-	 * @param {number} affichage
-	 * 						1: squeleton without fillet and normal shape
-	 * 						2: sqeleton for fillet only
-	 * 						other: normal shape only
-	 * @return {string} 'svg shape <g><path .... / ></g>'
 	 */
 	function Shape() {
 		"use strict";
@@ -702,7 +691,7 @@
 		var mySvg = thesvgelem.getElementById(myView);
 
 		var gobj = [],
-			gname = ['basicshape', 'squeleton', 'ptsfillet', 'squeletontext', 'centerfillet'];
+			gname = ['basicshape', 'squeleton', 'squeletontext', 'centerfillet', 'ptsfillet'];
 
 		for (i = 0; i <= gname.length - 1; i += 1) {
 			gobj.push(document.createElementNS(NSSVG, 'g'));
@@ -846,61 +835,13 @@
 			texte.push(document.createElementNS(NSSVG, 'text'));
 			len = texte.length - 1;
 			texte[len].setAttributeNS(null, 'class', 'squeleton textsqueleton');
-			texte[len].setAttributeNS(null, 'id', 'view:' + noview + ' shape:' + noshape + ' node:' + i);
+			texte[len].setAttributeNS(null, 'id', 'view: ' + noview + ' shape: ' + noshape + ' node: ' + i);
 			texte[len].setAttributeNS(null, 'x', scale * (ori.x + pts[i].x));
 			texte[len].setAttributeNS(null, 'y', scale * (ori.y - pts[i].y));
 			texte[len].setAttributeNS(null, 'font-size', format.font_size);
 			texte[len].innerHTML = i;
-			gobj[3].appendChild(texte[len]);
+			gobj[2].appendChild(texte[len]);
 		}
-
-
-		// Print key points of fillet (squeleton) class=ptsfillet
-		// class allow to print or not with .style.visibility property
-		var cercle = [];
-		len = 0;
-
-		for (i = 0; i <= pts.length - 1; i += 1) {
-			if (pts[i].r !== null) {
-				cercle.push(document.createElementNS(NSSVG, 'circle'));
-				len = cercle.length - 1;
-				cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + pr[2 * i].x));
-				cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - pr[2 * i].y));
-				cercle[len].setAttributeNS(null, 'r', 3);
-				cercle[len].setAttributeNS(null, 'stroke-width', 0);
-				cercle[len].setAttributeNS(null, 'fill', 'yellow');
-				gobj[2].appendChild(cercle[len]);
-
-				cercle.push(document.createElementNS(NSSVG, 'circle'));
-				len = cercle.length - 1;
-				cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + pr[2 * i + 1].x));
-				cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - pr[2 * i + 1].y));
-				cercle[len].setAttributeNS(null, 'r', 3);
-				cercle[len].setAttributeNS(null, 'stroke-width', 0);
-				cercle[len].setAttributeNS(null, 'fill', 'green');
-				gobj[2].appendChild(cercle[len]);
-
-				cercle.push(document.createElementNS(NSSVG, 'circle'));
-				len = cercle.length - 1;
-				cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + su[2 * i].x));
-				cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - su[2 * i].y));
-				cercle[len].setAttributeNS(null, 'r', 3);
-				cercle[len].setAttributeNS(null, 'stroke-width', 0);
-				cercle[len].setAttributeNS(null, 'fill', 'yellow');
-				gobj[2].appendChild(cercle[len]);
-
-				cercle.push(document.createElementNS(NSSVG, 'circle'));
-				len = cercle.length - 1;
-				cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + su[2 * i + 1].x));
-				cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - su[2 * i + 1].y));
-				cercle[len].setAttributeNS(null, 'r', 3);
-				cercle[len].setAttributeNS(null, 'stroke-width', 0);
-				cercle[len].setAttributeNS(null, 'fill', 'green');
-				gobj[2].appendChild(cercle[len]);
-
-			}
-		}
-
 
 		// Print center of fillet (in red)
 
@@ -914,6 +855,7 @@
 		// https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
 		// 'Given two points on each line'
 
+		var cercle = [];
 		for (i = 0; i <= pts.length - 1; i += 1) {
 			if (pts[i].r !== null) {
 
@@ -951,13 +893,59 @@
 
 				cercle.push(document.createElementNS(NSSVG, 'circle'));
 				len = cercle.length - 1;
-				cercle[len].setAttributeNS(null, 'class', 'centerfillet');
+				cercle[len].setAttributeNS(null, 'class', 'squeleton centerfillet');
 				cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + ca));
 				cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - cb));
 				cercle[len].setAttributeNS(null, 'r', 3);
-				gobj[4].appendChild(cercle[len]);
+				gobj[3].appendChild(cercle[len]);
 			}
 		} // end for
+
+
+		// Print key points of fillet (squeleton) class=ptsfillet
+		// class allow to print or not with .style.visibility property
+		len = 0;
+
+		for (i = 0; i <= pts.length - 1; i += 1) {
+			if (pts[i].r !== null) {
+				cercle.push(document.createElementNS(NSSVG, 'circle'));
+				len = cercle.length - 1;
+				cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + pr[2 * i].x));
+				cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - pr[2 * i].y));
+				cercle[len].setAttributeNS(null, 'r', 3);
+				cercle[len].setAttributeNS(null, 'stroke-width', 0);
+				cercle[len].setAttributeNS(null, 'fill', 'yellow');
+				gobj[4].appendChild(cercle[len]);
+
+				cercle.push(document.createElementNS(NSSVG, 'circle'));
+				len = cercle.length - 1;
+				cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + pr[2 * i + 1].x));
+				cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - pr[2 * i + 1].y));
+				cercle[len].setAttributeNS(null, 'r', 3);
+				cercle[len].setAttributeNS(null, 'stroke-width', 0);
+				cercle[len].setAttributeNS(null, 'fill', 'green');
+				gobj[4].appendChild(cercle[len]);
+
+				cercle.push(document.createElementNS(NSSVG, 'circle'));
+				len = cercle.length - 1;
+				cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + su[2 * i].x));
+				cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - su[2 * i].y));
+				cercle[len].setAttributeNS(null, 'r', 3);
+				cercle[len].setAttributeNS(null, 'stroke-width', 0);
+				cercle[len].setAttributeNS(null, 'fill', 'yellow');
+				gobj[4].appendChild(cercle[len]);
+
+				cercle.push(document.createElementNS(NSSVG, 'circle'));
+				len = cercle.length - 1;
+				cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + su[2 * i + 1].x));
+				cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - su[2 * i + 1].y));
+				cercle[len].setAttributeNS(null, 'r', 3);
+				cercle[len].setAttributeNS(null, 'stroke-width', 0);
+				cercle[len].setAttributeNS(null, 'fill', 'green');
+				gobj[4].appendChild(cercle[len]);
+
+			}
+		}
 
 
 		return 0;
@@ -1180,18 +1168,24 @@
 
 	/**
 	 * draw point constructor for fillet
+	 * 
+	 * <p>
+	 * Take myVar from checkbox with id
+	 * modify all element with class myvar
+	 * </p>
+	 * 
+	 * @param {string} myVar
 	 */
-	function drawFilletpts() {
-		"use strict";
-		var x = document.forms.myForm2;
+	function displayClassToggle(myVar) {
+		//var x = document.forms.myForm2;
+		var x = document.getElementById(myVar);
 		if (x[0].checked === true) {
-			var nodes = theSvgElement.getElementsByClassName('ptsfillet');
+			var nodes = theSvgElement.getElementsByClassName(myVar);
 			for (var i = 0, len = nodes.length; i < len; i++) {
 				nodes[i].style.visibility = "visible";
 			}
-
 		} else if (x[0].checked === false) {
-			nodes = theSvgElement.getElementsByClassName('ptsfillet');
+			nodes = theSvgElement.getElementsByClassName(myVar);
 			for (i = 0, len = nodes.length; i < len; i++) {
 				nodes[i].style.visibility = "hidden";
 			}
@@ -1228,58 +1222,6 @@
 
 		return 0;
 	} // drawOrigin
-
-
-
-	/**
-	 * draw point constructor for fillet
-	 * 
-	 * <p>pass from hidden to visible</p>
-	 */
-	function drawSqueleton() {
-		var index = 0,
-			len = 0,
-			nodes,
-			x;
-
-		x = document.forms.myForm3;
-
-		// Class:
-		// - squeleton
-		// - centerfillet
-		// - squeletontext
-
-		if (x[0].checked === true) {
-			nodes = theSvgElement.getElementsByClassName('squeleton');
-			for (index = 0, len = nodes.length; index < len; index++) {
-				nodes[index].style.visibility = "visible";
-			}
-			nodes = theSvgElement.getElementsByClassName('centerfillet');
-			for (index = 0, len = nodes.length; index < len; index++) {
-				nodes[index].style.visibility = "visible";
-			}
-			nodes = theSvgElement.getElementsByClassName('squeletontext');
-			for (index = 0, len = nodes.length; index < len; index++) {
-				nodes[index].style.visibility = "visible";
-			}
-		} else if (x[0].checked === false) {
-			nodes = theSvgElement.getElementsByClassName('squeleton');
-			for (index = 0, len = nodes.length; index < len; index++) {
-				nodes[index].style.visibility = "hidden";
-			}
-			nodes = theSvgElement.getElementsByClassName('centerfillet');
-			for (index = 0, len = nodes.length; index < len; index++) {
-				nodes[index].style.visibility = "hidden";
-			}
-			nodes = theSvgElement.getElementsByClassName('squeletontext');
-			for (index = 0, len = nodes.length; index < len; index++) {
-				nodes[index].style.visibility = "hidden";
-			}
-		}
-		return 0;
-	}
-
-
 
 	/**
 	 * Save data as .SVG file
