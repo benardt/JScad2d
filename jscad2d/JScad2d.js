@@ -2,7 +2,7 @@
  * Function for 2D cad drawing
  * 
  * Author: Thierry Bénard
- * Date: 27 Oct 2017
+ * Date: 30 Oct 2017
  * 
  */
 
@@ -17,10 +17,9 @@
 	var theObj;
 	var theSvgElement;
 	var panZoomInstance;
+	var editor;
 
-	// Parameters
-	var panRate = 10; // Number of pixels to pan per key press.    
-	var zoomRate = 1.1; // Must be greater than 1. Increase this value for faster zooming (i.e., less granularity).
+	// Parameters 
 	var NSSVG = 'http://www.w3.org/2000/svg';
 	var WINDOWS_WIDTH = 600;
 
@@ -30,9 +29,10 @@
 		saveTextAsSVG: saveTextAsSVG,
 		displayClassToggle: displayClassToggle,
 		drawOrigin: drawOrigin,
-		zoom: zoom,
-		pan: pan,
-		doDebug: doDebug
+		zoomandpan: zoomandpan,
+		doDebug: doDebug,
+		readfile: readfile,
+		loadFileAsText: loadFileAsText
 	};
 
 	/**
@@ -85,6 +85,70 @@
 
 
 	/**
+	 * Load a JSON document from local disk
+	 * 
+	 */
+	function loadFileAsText() {
+
+		if (typeof editor !== "undefined") {
+			alert("Already exist!");
+			return 0;
+		}
+
+		var fileToLoad = document.getElementById("fileToLoad").files[0];
+		var fileReader = new FileReader();
+		fileReader.onload = function(fileLoadedEvent) {
+			var textFromFileLoaded = fileLoadedEvent.target.result;
+			var container = document.getElementById("jsoneditor");
+			//alert(textFromFileLoaded);
+			if (IsJsonString(textFromFileLoaded)) {
+				editor = new JSONEditor(container);
+				editor.setText(textFromFileLoaded);
+				JScad2d.doInitialization();
+			} else {
+				alert("Error object file!");
+			}
+			// end here!!!
+		};
+		fileReader.readAsText(fileToLoad, "UTF-8");
+	}
+
+
+	/**
+	 * Load a JSON document from server
+	 * 
+	 * @param {string} url
+	 * @param {string} container
+	 */
+	function readfile(myurl) {
+		
+		if (typeof editor !== "undefined") {
+			alert("Already exist!");
+			return 0;
+		}
+		var request = new XMLHttpRequest();
+		var strTemp;
+		request.open('GET', myurl, false); // `false` makes the request synchronous
+		request.send(null);
+		if (request.status === 200) {
+			// create the editor
+			// needed to use JSON Editor
+			var container = document.getElementById("jsoneditor");
+
+			strTemp = request.responseText;
+			if (IsJsonString(strTemp)) {
+				editor = new JSONEditor(container);
+				editor.setText(strTemp);
+				JScad2d.doInitialization();
+			} else {
+				alert("Error object file!");
+			}
+		}
+		return 0;
+	}
+
+
+	/**
 	 * Initialize drawing
 	 * 
 	 * <p>
@@ -123,6 +187,7 @@
 			svg += `<defs><style type="text/css">
 				path.basicshape {
 					stroke-width: 2;
+					stroke: black;
 				}
 				line.dim {
 					stroke-width: 1;
@@ -142,6 +207,14 @@
 				}
 				circle.origin {
 					fill: blue;
+					stroke-width: 0;
+				}
+				circle.circleptsfilletg {
+					fill: green;
+					stroke-width: 0;
+				}
+				circle.circleptsfillety {
+					fill: yellow;
 					stroke-width: 0;
 				}
 				</style></defs>
@@ -168,11 +241,15 @@
 	}
 
 
-	//-------------------------------------------------------------------
-	// Main function
-	//-------------------------------------------------------------------
+	/**
+	 * Main functuion
+	 * 
+	 * <p>
+	 * Each time a key is stoke, the function is launched.
+	 * The function draw the part with changes
+	 * </p>
+	 */
 	function doUpdate() {
-		"use strict";
 
 		var noview = 0,
 			noshape = 0,
@@ -265,7 +342,7 @@
 	 * </p>
 	 */
 	function displayNodesinfo() {
-			
+
 		var ptx = 0,
 			pty = 0,
 			arrpt = [],
@@ -275,26 +352,26 @@
 			svgg[i].addEventListener('mouseover', function(evt) {
 				t = evt.target;
 				arrpt = t.id.split(" ");
-				
+
 				//1: Views; 3: Shapes; 5: Points
 				ptx = theObj.Views[arrpt[1]].Shapes[arrpt[3]].Points[arrpt[5]].x;
 				pty = theObj.Views[arrpt[1]].Shapes[arrpt[3]].Points[arrpt[5]].y;
-				
+
 				var elemx = document.getElementById("nodeinfox");
 				var elemy = document.getElementById("nodeinfoy");
-				
+
 				elemx.setAttribute("type", "text");
 				elemy.setAttribute("type", "text");
-				
+
 				elemx.readOnly = true;
 				elemy.readOnly = true;
-				
+
 				elemx.size = 10;
 				elemy.size = 10;
-				
+
 				elemx.value = ptx;
 				elemy.value = pty;
-				
+
 				document.getElementById("outputsqueleton").innerHTML = "View: " + arrpt[1] + " / Shape: " + arrpt[3];
 			});
 			svgg[i].addEventListener('mouseout', function() {
@@ -304,7 +381,7 @@
 
 			});
 		}
-		
+
 		return 0;
 	}
 
@@ -809,7 +886,6 @@
 		path.setAttributeNS(null, 'class', 'basicshape');
 		path.setAttributeNS(null, 'd', mydattr);
 		path.setAttributeNS(null, 'fill', myFill);
-		path.setAttributeNS(null, 'stroke', 'black');
 		gobj[0].appendChild(path);
 
 		// print squeleton
@@ -855,7 +931,6 @@
 		// https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
 		// 'Given two points on each line'
 
-		var cercle = [];
 		for (i = 0; i <= pts.length - 1; i += 1) {
 			if (pts[i].r !== null) {
 
@@ -891,13 +966,10 @@
 				ca = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / coeff;
 				cb = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / coeff;
 
-				cercle.push(document.createElementNS(NSSVG, 'circle'));
-				len = cercle.length - 1;
-				cercle[len].setAttributeNS(null, 'class', 'squeleton centerfillet');
-				cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + ca));
-				cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - cb));
-				cercle[len].setAttributeNS(null, 'r', 3);
-				gobj[3].appendChild(cercle[len]);
+				gobj[3].appendChild(createCircle(
+					scale * (ori.x + ca),
+					scale * (ori.y - cb),
+					3, 'squeleton centerfillet'));
 			}
 		} // end for
 
@@ -908,47 +980,47 @@
 
 		for (i = 0; i <= pts.length - 1; i += 1) {
 			if (pts[i].r !== null) {
-				cercle.push(document.createElementNS(NSSVG, 'circle'));
-				len = cercle.length - 1;
-				cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + pr[2 * i].x));
-				cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - pr[2 * i].y));
-				cercle[len].setAttributeNS(null, 'r', 3);
-				cercle[len].setAttributeNS(null, 'stroke-width', 0);
-				cercle[len].setAttributeNS(null, 'fill', 'yellow');
-				gobj[4].appendChild(cercle[len]);
+				gobj[4].appendChild(createCircle(
+					scale * (ori.x + pr[2 * i].x),
+					scale * (ori.y - pr[2 * i].y),
+					3, 'circleptsfillety'));
 
-				cercle.push(document.createElementNS(NSSVG, 'circle'));
-				len = cercle.length - 1;
-				cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + pr[2 * i + 1].x));
-				cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - pr[2 * i + 1].y));
-				cercle[len].setAttributeNS(null, 'r', 3);
-				cercle[len].setAttributeNS(null, 'stroke-width', 0);
-				cercle[len].setAttributeNS(null, 'fill', 'green');
-				gobj[4].appendChild(cercle[len]);
+				gobj[4].appendChild(createCircle(
+					scale * (ori.x + pr[2 * i + 1].x),
+					scale * (ori.y - pr[2 * i + 1].y),
+					3, 'circleptsfilletg'));
 
-				cercle.push(document.createElementNS(NSSVG, 'circle'));
-				len = cercle.length - 1;
-				cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + su[2 * i].x));
-				cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - su[2 * i].y));
-				cercle[len].setAttributeNS(null, 'r', 3);
-				cercle[len].setAttributeNS(null, 'stroke-width', 0);
-				cercle[len].setAttributeNS(null, 'fill', 'yellow');
-				gobj[4].appendChild(cercle[len]);
+				gobj[4].appendChild(createCircle(
+					scale * (ori.x + su[2 * i].x),
+					scale * (ori.y - su[2 * i].y),
+					3, 'circleptsfillety'));
 
-				cercle.push(document.createElementNS(NSSVG, 'circle'));
-				len = cercle.length - 1;
-				cercle[len].setAttributeNS(null, 'cx', scale * (ori.x + su[2 * i + 1].x));
-				cercle[len].setAttributeNS(null, 'cy', scale * (ori.y - su[2 * i + 1].y));
-				cercle[len].setAttributeNS(null, 'r', 3);
-				cercle[len].setAttributeNS(null, 'stroke-width', 0);
-				cercle[len].setAttributeNS(null, 'fill', 'green');
-				gobj[4].appendChild(cercle[len]);
-
+				gobj[4].appendChild(createCircle(
+					scale * (ori.x + su[2 * i + 1].x),
+					scale * (ori.y - su[2 * i + 1].y),
+					3, 'circleptsfilletg'));
 			}
 		}
 
-
 		return 0;
+	}
+
+	/**
+	 * Create circle element for SVG
+	 * 
+	 * @param {number} x position for center
+	 * @param {number} y position for center
+	 * @param {number} radius
+	 * @param {string} class
+	 * @return {SVG element} SVG circle element
+	 */
+	function createCircle(mycx, mycy, myRadius, myClass) {
+		var cercleelem = document.createElementNS(NSSVG, 'circle');
+		cercleelem.setAttributeNS(null, 'cx', mycx);
+		cercleelem.setAttributeNS(null, 'cy', mycy);
+		cercleelem.setAttributeNS(null, 'r', myRadius);
+		cercleelem.setAttributeNS(null, 'class', myClass);
+		return cercleelem;
 	}
 
 	/**
@@ -1258,6 +1330,13 @@
 		downloadLink.click();
 	}
 
+	/**
+	 * destro Click element
+	 */
+	function destroyClickedElement(myEvent) {
+		document.body.removeChild(myEvent.target);
+	}
+
 
 	/**
 	 * Save data in JSON file
@@ -1295,47 +1374,36 @@
 	}
 
 	/**
-	 * Pan function
+	 * zoom & pan function
 	 * 
-	 * @param {string} sens (pan direction)
+	 * @param {string} zoomIn, zoomOut or left, right, up , down
 	 */
-	function pan(sens) {
-		"use strict";
-		var viewBox = theSvgElement.getAttribute('viewBox'), // Grab the object representing the SVG element's viewBox attribute.
-			viewBoxValues = viewBox.split(' '); // Create an array and insert each individual view box attribute value (assume they're seperated by a single whitespace character).
-
-		viewBoxValues[0] = parseFloat(viewBoxValues[0]); // Convert string "numeric" values to actual numeric values.
-		viewBoxValues[1] = parseFloat(viewBoxValues[1]);
-
-		switch (sens) {
-			case "left":
-				viewBoxValues[0] += panRate; // Increase the x-coordinate value of the viewBox attribute to pan right.
-				break;
-			case "right":
-				viewBoxValues[0] -= panRate; // Decrease the x-coordinate value of the viewBox attribute to pan left.
-				break;
-			case "up":
-				viewBoxValues[1] += panRate; // Increase the y-coordinate value of the viewBox attribute to pan down.
-				break;
-			case "down":
-				viewBoxValues[1] -= panRate; // Decrease the y-coordinate value of the viewBox attribute to pan up.      
-				break;
-		} // switch
-
-		theSvgElement.setAttribute('viewBox', viewBoxValues.join(' ')); // Convert the viewBoxValues array into a string with a white space character between the given values.
-	}
-
-	/**
-	 * zoom function
-	 * 
-	 * @param {string} zoomIn or zoomOut
-	 */
-	function zoom(zoomType) {
-
+	function zoomandpan(zoomType) {
+		var myStep = 30;
 		if (zoomType === 'zoomIn') {
 			panZoomInstance.zoomIn();
 		} else if (zoomType === 'zoomOut') {
 			panZoomInstance.zoomOut();
+		} else if (zoomType === 'left') {
+			panZoomInstance.panBy({
+				x: 0 - myStep,
+				y: 0
+			});
+		} else if (zoomType === 'up') {
+			panZoomInstance.panBy({
+				x: 0,
+				y: myStep
+			});
+		} else if (zoomType === 'down') {
+			panZoomInstance.panBy({
+				x: 0,
+				y: 0 - myStep
+			});
+		} else if (zoomType === 'right') {
+			panZoomInstance.panBy({
+				x: myStep,
+				y: 0
+			});
 		} else if (zoomType === 'reset') {
 			panZoomInstance.resetZoom();
 			panZoomInstance.resetPan();
@@ -1385,7 +1453,7 @@
 		}
 
 		return 0;
-	} // doDebug
+	}
 
 	/**
 	 * function for Debug
@@ -1404,5 +1472,21 @@
 		strTmp += varC + "<br>";
 		return strTmp;
 	}
+
+	/**
+	 * Test if str is JSON format
+	 * 
+	 * @param {string} str
+	 * @return {boolean} true or false
+	 */
+	function IsJsonString(str) {
+		try {
+			JSON.parse(str);
+		} catch (e) {
+			return false;
+		}
+		return true;
+	}
+
 
 })(this, document);

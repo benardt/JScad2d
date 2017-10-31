@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta meta name="description" content="2D CAD drawing">
+	<link rel="shortcut icon" href="./img/ruler-triangle.ico" />
+	<title>2D CAD Drawing</title>
+
+	<style>
+		body {
+			font-family: "Helvetica", "Arial", "FreeSans", "Verdana", "Tahoma", "Lucida Sans", "Lucida Sans Unicode", "Luxi Sans", "sans-serif";
+		}
+	</style>
+
+	<link rel="stylesheet" type="text/css" href="./jsoneditor/jsoneditor.min.css">
+	<link rel="stylesheet" type="text/css" href="./jscad2d/JScad2d.css">
+	<script src="./svg-pan-zoom/svg-pan-zoom.js"></script>
+	<script src="./jsoneditor/jsoneditor.min.js"></script>
+	<script src="./jscad2d/JScad2d.js"></script>
+
+</head>
+
+<body>
+	<table border="0">
+		<tr>
+			<td rowspan="3"><img src="./img/ruler-triangle-48.png" alt="icon" /></td>
+			<td class="menu">Load a JSON file: </td>
+			<td class="menu">
+				<input type="file" id="fileToLoad" accept=".json"><br>
+				<button onclick="JScad2d.loadFileAsText()">Load Selected File</button>
+			</td>
+			<td rowspan="4">
+				<div id="drawing"></div>
+			</td>
+		</tr>
+		<tr>
+			<td class="menu">Save file to: </td>
+			<td class="menu">
+				<button onclick="JScad2d.saveTextAsFile()">JSON</button>&nbsp;
+				<button onclick="JScad2d.saveTextAsSVG()">SVG</button>&nbsp;
+			</td>
+		</tr>
+		<tr>
+			<td class="menu">
+				<button type="button" onclick="JScad2d.zoomandpan('zoomIn');">Zoom In</button>
+				<button type="button" onclick="JScad2d.zoomandpan('zoomOut');">Zoom Out</button>
+				<button type="button" onclick="JScad2d.zoomandpan('reset');">Reset</button>
+			</td>
+			<td class="menu">
+				<button type="button" onclick="JScad2d.zoomandpan('left');">&#8678;</button>
+				<button type="button" onclick="JScad2d.zoomandpan('up');">&#8679;</button>
+				<button type="button" onclick="JScad2d.zoomandpan('down');">&#8681;</button>
+				<button type="button" onclick="JScad2d.zoomandpan('right');">&#8680;</button>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="3">
+				<div id="jsoneditor" style="width: 450px; height: 400px;"></div>
+			</td>
+		</tr>
+		<tr>
+			<td class="menu" colspan="2">
+				<form id="squeleton">
+					<input class="messageCheckbox" type="checkbox" onclick="JScad2d.displayClassToggle('squeleton')" value="1" id="inputqueleton">
+					<label for="inputqueleton">squeleton</label>
+				</form>
+				<form id="ptsfillet">
+					<input class="messageCheckbox" type="checkbox" onclick="JScad2d.displayClassToggle('ptsfillet')" value="2" id="inputfillet">
+					<label for="inputfillet">fillet</label>
+				</form>
+				<form id="myForm1">
+					<input class="messageCheckbox" type="checkbox" onclick="JScad2d.drawOrigin()" value="3" id="inputorigin">
+					<label for="inputorigin">origin</label>
+				</form>
+				<form id="dim">
+					<input class="messageCheckbox" type="checkbox" onclick="JScad2d.displayClassToggle('dim')" id="inputdimension" checked="checked">
+					<label for="inputdimension">dimension</label>
+				</form>
+				<button type="button" onclick="JScad2d.doDebug();">Debug</button>
+				<button onclick="JScad2d.readfile('./examples/Part-spigot1.json')">Example</button>
+			</td>
+			<td id="nodeinfo" class="menu">
+				<ul class="nodes">
+					<li><span id="outputsqueleton"></span></li>
+					<li><label class="nodes">x:&nbsp;</label><input id="nodeinfox" class="info"></input>
+					</li>
+					<li><label class="nodes">y:&nbsp;</label><input id="nodeinfoy" class="info"></input>
+					</li>
+				</ul>
+			</td>
+		</tr>
+	</table>
+
+</body>
+</html>

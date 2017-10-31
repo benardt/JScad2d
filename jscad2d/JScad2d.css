@@ -1,0 +1,25 @@
+td.menu {
+	background: #4679bd;
+	color: #fff;
+}
+
+input.info {
+	background: beige;
+	border: 0px;
+	padding: 2px;
+	border-radius: 4px;
+	color: dimgrey;
+	width: 75px;
+}
+
+label.nodes {
+	display: inline-block;
+	width: 30px;
+	text-align: right;
+}
+
+ul.nodes {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}

@@ -20,6 +20,10 @@ Draw parts and assemble them in an assembly drawing. Parts and Assy drawing are 
 * Draw dimensions
 * Apply transformation
   * Rotate
+* Import from local drive or server
+* Export on local drive with format:
+  * JSON (native format)
+  * SVG
 
 ## Usage
 
@@ -76,7 +80,6 @@ Draw parts and assemble them in an assembly drawing. Parts and Assy drawing are 
 ### Dependencies
 
 * jsoneditor (https://github.com/josdejong/jsoneditor/)
-* filereader.js (https://github.com/bgrins/filereader.js)
 * svg-pan-zoom (https://github.com/ariutta/svg-pan-zoom)
 
 
