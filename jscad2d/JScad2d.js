@@ -121,7 +121,7 @@
 	 * @param {string} container
 	 */
 	function readfile(myurl) {
-		
+
 		if (typeof editor !== "undefined") {
 			alert("Already exist!");
 			return 0;
@@ -162,8 +162,6 @@
 	 */
 	function doInitialization() {
 		var svg = "";
-
-		//console.log(myDoc + " / " + theSvgElement);
 
 		if (typeof theSvgElement === "undefined") {
 			// Add event to body: each time a key is hit -> launch function 'doUpdate'
@@ -250,6 +248,12 @@
 	 * </p>
 	 */
 	function doUpdate() {
+
+		//console.log(myDoc.defaultView);
+		if (myDoc.defaultView === null) {
+			alert("Window is closed!");
+			return 0;
+		}
 
 		var noview = 0,
 			noshape = 0,
@@ -723,6 +727,67 @@
 	}
 
 
+	/**
+	 * get angle between 3 points
+	 * 
+	 * @param {object} point
+	 * @param {object} center point
+	 * @param {object} point
+	 * @retunr {number} angle
+	 */
+	function getAngleABC(a, b, c) {
+		var ab = {
+			x: b.x - a.x,
+			y: b.y - a.y
+		};
+		var cb = {
+			x: b.x - c.x,
+			y: b.y - c.y
+		};
+
+		// dot product  
+		var dot = ab.x * cb.x + ab.y * cb.y;
+
+		// length square of both vectors
+		var abSqr = ab.x * ab.x + ab.y * ab.y;
+		var cbSqr = cb.x * cb.x + cb.y * cb.y;
+
+		// square of cosine of the needed angle    
+		var cosSqr = dot * dot / abSqr / cbSqr;
+
+		// this is a known trigonometric equality:
+		// cos(alpha * 2) = [ cos(alpha) ]^2 * 2 - 1
+		var cos2 = 2 * cosSqr - 1;
+
+		// Here's the only invocation of the heavy function.
+		// It's a good idea to check explicitly if cos2 is within [-1 .. 1] range
+
+		var alpha2 = 0;
+		if (cos2 <= -1) {
+			alpha2 = Math.PI;
+		} else if (cos2 >= 1) {
+			alpha2 = 0;
+		} else {
+			alpha2 = Math.acos(cos2);
+		}
+
+		var rslt = alpha2 / 2;
+
+		// Now revolve the ambiguities.
+		// 1. If dot product of two vectors is negative - the angle is definitely
+		// above 90 degrees. Still we have no information regarding the sign of the angle.
+
+		// NOTE: This ambiguity is the consequence of our method: calculating the cosine
+		// of the double angle. This allows us to get rid of calling sqrt.
+
+		if (dot < 0) {
+			rslt = Math.PI - rslt;
+		}
+
+		return rslt;
+	}
+
+
 
 	/**
 	 * draw one shape
@@ -786,13 +851,7 @@
 
 		// Find angle at each point
 		for (i = 0; i <= pts.length - 1; i += 1) {
-			ax = pts[p[i]].x - pts[i].x;
-			ay = pts[p[i]].y - pts[i].y;
-			bx = pts[s[i]].x - pts[i].x;
-			by = pts[s[i]].y - pts[i].y;
-			// arccosinus du produit scalaire sur le produit des normes
-			angle[i] = Math.acos((ax * bx + ay * by) /
-				(Math.sqrt(ax * ax + ay * ay) * Math.sqrt(bx * bx + by * by)));
+			angle[i] = getAngleABC(pts[p[i]], pts[i], pts[s[i]]);
 		}
 
 		// Calculate length (pour positionner les 2 pts "précédent" et "suivant")
@@ -808,7 +867,7 @@
 		// (x2, y2) = current point, (x1, y1) = previous or next point
 
 		// Line segment division (split)
-		// coordinates of the point R are ((mx2 + nx1)/(m + n), (my 2 + ny1)/(m + n))
+		// coordinates of the point R are ((mx2 + nx1)/(m + n), (my2 + ny1)/(m + n))
 		// the point R divides the line-segment internally in a given ratio m : n
 
 		// For fillet (circle) ratio is find from kappa parameter
@@ -823,13 +882,18 @@
 				n = l[i];
 				m = Math.sqrt(ax * ax + ay * ay) - n;
 
-				pr[2 * i] = new Point((m * pts[i].x + n * pts[p[i]].x) / (m + n),
-					(m * pts[i].y + n * pts[p[i]].y) / (m + n), null);
+				pr[2 * i] = {
+					x: (m * pts[i].x + n * pts[p[i]].x) / (m + n),
+					y: (m * pts[i].y + n * pts[p[i]].y) / (m + n)
+				};
 
-				n = l[i] - pts[i].r * KAPPA;
+				n = l[i] * (1 - KAPPA);
 				m = Math.sqrt(ax * ax + ay * ay) - n;
-				pr[2 * i + 1] = new Point((m * pts[i].x + n * pts[p[i]].x) / (m + n),
-					(m * pts[i].y + n * pts[p[i]].y) / (m + n), null);
+				pr[2 * i + 1] = {
+					x: (m * pts[i].x + n * pts[p[i]].x) / (m + n),
+					y: (m * pts[i].y + n * pts[p[i]].y) / (m + n)
+				};
+
 
 				// for next
 				bx = pts[s[i]].x - pts[i].x;
@@ -837,13 +901,18 @@
 
 				n = l[i];
 				m = Math.sqrt(bx * bx + by * by) - n;
-				su[2 * i] = new Point((m * pts[i].x + n * pts[s[i]].x) / (m + n),
-					(m * pts[i].y + n * pts[s[i]].y) / (m + n), null);
+				su[2 * i] = {
+					x: (m * pts[i].x + n * pts[s[i]].x) / (m + n),
+					y: (m * pts[i].y + n * pts[s[i]].y) / (m + n)
+				};
 
-				n = l[i] - pts[i].r * KAPPA;
+				n = l[i] * (1 - KAPPA);
 				m = Math.sqrt(bx * bx + by * by) - n;
-				su[2 * i + 1] = new Point((m * pts[i].x + n * pts[s[i]].x) / (m + n),
-					(m * pts[i].y + n * pts[s[i]].y) / (m + n), null);
+				su[2 * i + 1] = {
+					x: (m * pts[i].x + n * pts[s[i]].x) / (m + n),
+					y: (m * pts[i].y + n * pts[s[i]].y) / (m + n)
+				};
+
 			}
 		}
 
