@@ -2,10 +2,11 @@
  * Function for 2D cad drawing
  * 
  * Author: Thierry Bénard
- * Date: 30 Oct 2017
+ * Date: 06 Nov 2017
  * 
  */
 
+/*globals JSONEditor svgPanZoom*/
 "use strict";
 
 (function(window, document) {
@@ -34,16 +35,6 @@
 		readfile: readfile,
 		loadFileAsText: loadFileAsText
 	};
-
-	/**
-	 * object descriptor: Point
-	 */
-	function Point(x, y, r) {
-		this.x = x;
-		this.y = y;
-		this.r = r;
-	}
-
 
 	/**
 	 * 
@@ -810,7 +801,7 @@
 			texture = arguments[4], // texture
 			noview = arguments[5], // view # for hatch pattern
 			format = arguments[6], // format
-			thesvgelem = arguments[7],
+			thesvgelem = {},
 
 			p = [], // number of previous point
 			s = [], // number of next point
@@ -828,6 +819,8 @@
 			m,
 			n,
 			KAPPA = 0.5522847498;
+			
+			thesvgelem = arguments[7];
 
 		var myView = "view" + noview;
 		var mySvg = thesvgelem.getElementById(myView);
