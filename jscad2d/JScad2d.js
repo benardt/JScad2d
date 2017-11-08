@@ -2,7 +2,7 @@
  * Function for 2D cad drawing
  * 
  * Author: Thierry Bénard
- * Date: 06 Nov 2017
+ * Date: 07 Nov 2017
  * 
  */
 
@@ -819,8 +819,8 @@
 			m,
 			n,
 			KAPPA = 0.5522847498;
-			
-			thesvgelem = arguments[7];
+
+		thesvgelem = arguments[7];
 
 		var myView = "view" + noview;
 		var mySvg = thesvgelem.getElementById(myView);
@@ -1389,7 +1389,7 @@
 			document.body.appendChild(downloadLink);
 
 		}
-		downloadLink.click();
+		simulateClick(downloadLink);
 	}
 
 	/**
@@ -1399,7 +1399,6 @@
 		document.body.removeChild(myEvent.target);
 	}
 
-
 	/**
 	 * Save data in JSON file
 	 * 
@@ -1408,7 +1407,6 @@
 	function saveTextAsFile() {
 		"use strict";
 
-		//var textToWrite = document.getElementById("inputTextToSave").value;
 		var json = editor.get();
 		var textToWrite = JSON.stringify(json, null, 2);
 
@@ -1432,7 +1430,26 @@
 			downloadLink.style.display = "none";
 			document.body.appendChild(downloadLink);
 		}
-		downloadLink.click();
+
+		simulateClick(downloadLink);
+
+	}
+
+	function simulateClick(cb) {
+		var event = new MouseEvent('click', {
+			view: window,
+			bubbles: true,
+			cancelable: true
+		});
+
+		var cancelled = !cb.dispatchEvent(event);
+		if (cancelled) {
+			// A handler called preventDefault.
+			alert("cancelled");
+		} else {
+			// None of the handlers called preventDefault.
+			//alert("not cancelled");
+		}
 	}
 
 	/**
@@ -1473,6 +1490,7 @@
 			alert("function zoom(zoomType) given invalid zoomType parameter.");
 		}
 	}
+	
 
 	/**
 	 * print Debug data in another window
@@ -1489,7 +1507,7 @@
 		myDocDebug = myWindow.document;
 
 		myDocDebug.open();
-
+ 
 		myDocDebug.writeln('<h2>Debug</h2>');
 		myDocDebug.body.style.backgroundColor = "black";
 		myDocDebug.body.style.color = "white";

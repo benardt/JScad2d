@@ -3,8 +3,10 @@
 
 Javascript Library for CAD 2D drawing from json file. A JSON file includes all data needed to draw paramateric 2D shape as vector image. Export in JSON file or in SVG file.
 
-<img alt="Global view" src="https://github.com/benardt/JScad2d/blob/master/misc/VueGlobale.png">
+[Test here the live demo](https://benardt.github.io)
 
+
+![Global view](./misc/VueGlobale.png)
 
 ## Description
 
