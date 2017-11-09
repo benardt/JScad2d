@@ -1,17 +1,18 @@
 # JScad2d
 
-
 Javascript Library for CAD 2D drawing from json file. A JSON file includes all data needed to draw paramateric 2D shape as vector image. Export in JSON file or in SVG file.
 
 [Test here the live demo](https://benardt.github.io)
 
+## Screenshots
 
 ![Global view](./misc/VueGlobale.png)
 
 ## Description
 
-
 Draw parts and assemble them in an assembly drawing. Parts and Assy drawing are build from json file. A special editor allows live drawing.
+
+NOTE: assembly functionality not yet coded!
 
 ## Features
 
@@ -28,6 +29,30 @@ Draw parts and assemble them in an assembly drawing. Parts and Assy drawing are 
   * SVG
 
 ## Usage
+
+### API Reference
+
+* JScad2d.loadFileAsText()
+* JScad2d.readfile(url)
+* JScad2d.zoomandpan(value)
+ * value for zoom: _zoomIn_ or _zoomOut_ or _reset_
+ * value for pan: _left_ or _right_ or _up_ or _down_
+* JScad2d.displayClassToggle('dim' or 'ptsfillet' or 'squeleton')
+* JScad2d.drawOrigin()
+* JScad2d.doDebug()
+
+### Code example
+
+Add JS libraries and style sheets links insied HEAD tag:
+```html
+<head>
+    <link rel="stylesheet" type="text/css" href="./jsoneditor/jsoneditor.min.css">
+    <link rel="stylesheet" type="text/css" href="./jscad2d/JScad2d.css">
+    <script src="./svg-pan-zoom/svg-pan-zoom.js"></script>
+    <script src="./jsoneditor/jsoneditor.min.js"></script>
+    <script src="./jscad2d/JScad2d.js"></script>
+</head>
+```
 
 ### JSON file description for PART
 
@@ -79,7 +104,7 @@ Draw parts and assemble them in an assembly drawing. Parts and Assy drawing are 
   * Transformation{}
 * Dimensions[]
   
-### Dependencies
+## Dependencies
 
 * jsoneditor (https://github.com/josdejong/jsoneditor/)
 * svg-pan-zoom (https://github.com/ariutta/svg-pan-zoom)
