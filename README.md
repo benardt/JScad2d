@@ -2,7 +2,7 @@
 
 Javascript Library for CAD 2D drawing from json file. A JSON file includes all data needed to draw paramateric 2D shape as vector image. Export in JSON file or in SVG file.
 
-[Test here the live demo](https://benardt.github.io)
+[Test here the live demo](https://benardt.github.io/indexjscad2d.htm)
 
 ## Screenshots
 
@@ -35,15 +35,15 @@ NOTE: assembly functionality not yet coded!
 * JScad2d.loadFileAsText()
 * JScad2d.readfile(url)
 * JScad2d.zoomandpan(value)
- * value for zoom: _zoomIn_ or _zoomOut_ or _reset_
- * value for pan: _left_ or _right_ or _up_ or _down_
+  * value for zoom: _zoomIn_ or _zoomOut_ or _reset_
+  * value for pan: _left_ or _right_ or _up_ or _down_
 * JScad2d.displayClassToggle('dim' or 'ptsfillet' or 'squeleton')
 * JScad2d.drawOrigin()
 * JScad2d.doDebug()
 
 ### Code example
 
-Add JS libraries and style sheets links insied HEAD tag:
+Add JS libraries and style sheets links inside HEAD tag:
 ```html
 <head>
     <link rel="stylesheet" type="text/css" href="./jsoneditor/jsoneditor.min.css">
