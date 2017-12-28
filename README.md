@@ -10,7 +10,7 @@ Javascript Library for CAD 2D drawing from json file. A JSON file includes all d
 
 ## Description
 
-Draw parts and assemble them in an assembly drawing. Parts and Assy drawing are build from json file. A special editor allows live drawing.
+Draw parts and assemble them in an assembly drawing. Parts and Assy drawing are built from json file. A special editor allows live drawing.
 
 NOTE: assembly functionality not yet coded!
 
@@ -68,7 +68,7 @@ Add JS libraries and style sheets links inside HEAD tag:
       * Name
       * Origine {}
         * x
-	* y
+	    * y
       * Hatch {}
     * Lines []
       * [] {}
