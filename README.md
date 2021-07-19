@@ -1,4 +1,4 @@
-https://www.code-inspector.com/project/24176/score/svg
+[![Code Grade](https://www.code-inspector.com/project/24176/score/svg)](https://frontend.code-inspector.com/project/24176/dashboard)
 
 # JScad2d
 
